@@ -1,0 +1,34 @@
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'java-library'
+apply plugin: 'jacoco'
+
+Map<String, String> commonDependencies = rootProject.ext.commonDependencies
+
+dependencies {
+    api (
+            commonDependencies.'json'
+    )
+    implementation (
+            commonDependencies.'jgrapht-core',
+            commonDependencies.'spring-amqp',
+            commonDependencies.'spring-boot-starter',
+            commonDependencies.'spring-boot-starter-webflux',
+            commonDependencies.'commons-lang3',
+            commonDependencies.'commons-codec',
+            commonDependencies.'jackson-annotations'
+    )
+
+    testImplementation commonDependencies.'spring-boot-starter-test'
+}
+
+jacocoTestReport {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    'org/openmbee/syncservice/core/queue/dto'
+                    ,'org/openmbee/syncservice/core/data/commits'
+                    ,'org/openmbee/syncservice/core/data/common'
+            ])
+        }))
+    }
+}

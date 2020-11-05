@@ -1,0 +1,31 @@
+[
+  {
+    "ldp:membershipResource": {
+      "@id": "#it"
+    },
+    "@type": [
+      "ldp:DirectContainer",
+      "kerml:Branch"
+    ],
+    "ldp:hasMemberRelation": "kerml:revisions",
+    "@id": "",
+    "@context": "https://twchost.com:8111/osmc/schemas/branchContainer"
+  },
+  {
+    "resourceID": "fcd5f469-cea2-4862-b135-8000cc9ccdc4",
+    "createdDate": 1587553420,
+    "startRevision": 1,
+    "author": "li342e",
+    "@type": [
+      "kerml:Branch"
+    ],
+    "kerml:revisions": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "latestRevision": 1,
+    "@context": "https://twchost.com:8111/osmc/schemas/branch"
+  }
+]

@@ -1,0 +1,76 @@
+buildscript {
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
+    }
+    repositories {
+        maven { url 'https://repo.spring.io/plugins-release' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'jacoco'
+
+group 'org.openmbee'
+description 'Sync Service'
+
+ext {
+    commonDependencies = [
+        'gson'                          : "com.google.code.gson:gson:$gsonVersion",
+        'json'                          : "org.json:json:20180130",
+        'jgrapht-core'                  : 'org.jgrapht:jgrapht-core:1.4.0',
+        'log4j'                         : "org.apache.logging.log4j:log4j-core:$log4jVersion",
+        'log4j-api'                     : "org.apache.logging.log4j:log4j-api:$log4jVersion",
+        'projectreactor'                : "org.projectreactor:reactor-spring:1.0.1.RELEASE",
+        'servlet-api'                   : 'javax.servlet:javax.servlet-api:4.0.1',
+        'spring-aspects'                : "org.springframework:spring-aspects:$springFrameworkVersion",
+        'spring-webmvc'                 : "org.springframework:spring-webmvc:$springFrameworkVersion",
+        'spring-web'                    : "org.springframework:spring-web:$springFrameworkVersion",
+        'spring-webflux'                : "org.springframework:spring-webflux:$springFrameworkVersion",
+        'spring-amqp'                   : "org.springframework.boot:spring-boot-starter-amqp:$springBootVersion",
+        'spring-boot'                   : "org.springframework.boot:spring-boot:$springBootVersion",
+        'spring-boot-autoconfigure'     : "org.springframework.boot:spring-boot-autoconfigure:$springBootVersion",
+        'spring-boot-starter'           : "org.springframework.boot:spring-boot-starter:$springBootVersion",
+        'spring-boot-starter-webflux'   : "org.springframework.boot:spring-boot-starter-webflux:$springBootVersion",
+        'spring-boot-starter-web'       : "org.springframework.boot:spring-boot-starter-web:$springBootVersion",
+        'spring-boot-starter-test'      : "org.springframework.boot:spring-boot-starter-test:$springBootVersion",
+        'spring-data-commons'           : "org.springframework.data:spring-data-commons:$springDataVersion",
+        'spring-security-core'          : "org.springframework.security:spring-security-core:$springSecurityVersion",
+        'rabbitmq'                      : "com.rabbitmq:amqp-client:5.9.0",
+        'commons-lang3'                 : "org.apache.commons:commons-lang3:3.1",
+        'commons-codec'                 : "commons-codec:commons-codec:1.10",
+        'javax.servlet-api'             : "javax.servlet:javax.servlet-api:4.0.1",
+        'jackson-annotations'           : "com.fasterxml.jackson.core:jackson-annotations:2.11.2"
+    ]
+}
+
+subprojects {
+    repositories {
+        maven { url 'https://repo.spring.io/plugins-release' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+
+    buildscript {
+        repositories {
+            maven { url 'https://repo.spring.io/plugins-release' }
+            gradlePluginPortal()
+            mavenCentral()
+        }
+    }
+
+    plugins.withType(JavaPlugin) {
+        project.sourceCompatibility = '11'
+        project.targetCompatibility = '11'
+        project.sourceSets {
+            main {
+                java.srcDirs "src/main/java"
+                resources.srcDirs "src/main/resources"
+            }
+            test {
+                java.srcDirs "src/test/java"
+                resources.srcDirs "src/test/resources"
+            }
+        }
+    }
+}

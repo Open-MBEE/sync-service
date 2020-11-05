@@ -1,0 +1,12 @@
+.classpath/
+bin/
+lib/
+libz/
+/build/
+.idea/**
+.gradle/
+.settings/
+.vscode/
+sonar/
+*/build/
+application.properties

@@ -1,0 +1,19 @@
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'java-library'
+apply plugin: 'jacoco'
+
+Map<String, String> commonDependencies = rootProject.ext.commonDependencies
+
+dependencies {
+    implementation (
+            commonDependencies.'json',
+            commonDependencies.'spring-boot-starter',
+            commonDependencies.'spring-boot-starter-webflux',
+            commonDependencies.'commons-lang3'
+    )
+
+    implementation project (':core')
+    implementation project (':sysml')
+
+    testImplementation commonDependencies.'spring-boot-starter-test'
+}

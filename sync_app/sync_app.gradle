@@ -1,0 +1,26 @@
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'java-library'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'jacoco'
+
+Map<String, String> commonDependencies = rootProject.ext.commonDependencies
+
+dependencies {
+    implementation (
+            commonDependencies.'spring-boot',
+            commonDependencies.'spring-boot-autoconfigure',
+            commonDependencies.'spring-boot-starter',
+            commonDependencies.'spring-boot-starter-webflux',
+            commonDependencies.'spring-boot-starter-web',
+            commonDependencies.'commons-lang3',
+            commonDependencies.'spring-webmvc'
+    )
+
+    implementation project(':core')
+    implementation project(':mms')
+    implementation project(':rabbit')
+    implementation project(':translate')
+    implementation project(':twc')
+
+    testImplementation commonDependencies.'spring-boot-starter-test'
+}
