@@ -3,6 +3,7 @@ package org.openmbee.syncservice.twc;
 public enum TeamworkCloudEndpoints {
 
     GET_BRANCH("workspaces/%s/resources/%s/branches/%s"),
+    GET_BRANCHES("workspaces/%s/resources/%s/branches?includeBody=%s"),
     GET_TWC_REVISION_INFO("resources/%s/branches/%s"),
     GET_VERSION_INFO("version"),
     GET_PROJECT_REVISIONS("workspaces/%s/resources/%s/revisions?includeBody=%s"),

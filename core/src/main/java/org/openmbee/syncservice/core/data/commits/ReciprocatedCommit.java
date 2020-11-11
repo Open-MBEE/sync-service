@@ -1,22 +1,22 @@
 package org.openmbee.syncservice.core.data.commits;
 
 public class ReciprocatedCommit {
-    private String localCommitId;
-    private String foreignCommitId;
+    private String sinkCommitId;
+    private String sourceCommitId;
 
-    public String getLocalCommitId() {
-        return localCommitId;
+    public String getSinkCommitId() {
+        return sinkCommitId;
     }
 
-    public void setLocalCommitId(String localCommitId) {
-        this.localCommitId = localCommitId;
+    public void setSinkCommitId(String sinkCommitId) {
+        this.sinkCommitId = sinkCommitId;
     }
 
-    public String getForeignCommitId() {
-        return foreignCommitId;
+    public String getSourceCommitId() {
+        return sourceCommitId;
     }
 
-    public void setForeignCommitId(String foreignCommitId) {
-        this.foreignCommitId = foreignCommitId;
+    public void setSourceCommitId(String sourceCommitId) {
+        this.sourceCommitId = sourceCommitId;
     }
 }

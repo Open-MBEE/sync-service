@@ -1,6 +1,6 @@
 package org.openmbee.syncservice.twc.sourcesink;
 
-import org.openmbee.syncservice.core.data.common.Branch;
+import org.openmbee.syncservice.core.data.branches.Branch;
 import org.openmbee.syncservice.core.utils.JSONUtils;
 import org.openmbee.syncservice.core.data.commits.Commit;
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
@@ -42,6 +42,13 @@ public class TeamworkCloud19_3SourceTest {
         MockitoAnnotations.initMocks(this);
 
 
+    }
+
+    @Test
+    public void getCommitHistoryTestNull() {
+        when(teamworkService.getProjectRevisions(endpoint)).thenReturn(null);
+        List<Commit> commits = teamworkCloud19_3Source.getCommitHistory();
+        assertNull(commits);
     }
 
     @Test
@@ -97,6 +104,15 @@ public class TeamworkCloud19_3SourceTest {
         assertEquals("trunk", commits.get(1).getBranchName());
         assertEquals("trunk", commits.get(2).getBranchName());
         assertEquals("trunk", commits.get(3).getBranchName());
+    }
+
+    @Test
+    public void getBranchTestNull() {
+        when(teamworkService.getBranchById(endpoint, "id")).thenReturn(null);
+
+        Branch branch = teamworkCloud19_3Source.getBranch("184bdb32-3959-4e23-b14f-346fbd26c0eb");
+
+        assertNull(branch);
     }
 
     @Test
@@ -263,6 +279,27 @@ public class TeamworkCloud19_3SourceTest {
         assertSame(updatedOne, commitChanges.getUpdatedElements().iterator().next());
         assertEquals(1, commitChanges.getDeletedElementIds().size());
         assertEquals("5d98719c-c720-487f-bb93-fa0a2496f08f", commitChanges.getDeletedElementIds().iterator().next());
+    }
+
+    @Test
+    public void getBranches_Normal() {
+        when(teamworkService.getBranches(endpoint)).thenReturn(new JSONArray((getBranchesContentExample())));
+
+        List<Branch> branches = teamworkCloud19_3Source.getBranches();
+
+        assertNotNull(branches);
+        assertEquals(2, branches.size());
+        assertEquals("trunk", branches.get(0).getName());
+        assertEquals("184bdb32-3959-4e23-b14f-346fbd26c0eb", branches.get(1).getId());
+    }
+
+    @Test
+    public void getBranches_Null() {
+        when(teamworkService.getBranches(endpoint)).thenReturn(null);
+
+        List<Branch> branches = teamworkCloud19_3Source.getBranches();
+
+        assertTrue(branches.isEmpty());
     }
 
     private String getRevisionHistoryExample() {
@@ -1023,6 +1060,76 @@ public class TeamworkCloud19_3SourceTest {
                 "  ],\n" +
                 "  \"empty\": false\n" +
                 "}";
+    }
+
+    private String getBranchesContentExample() {
+        return "[\n" +
+                "    [\n" +
+                "        {\n" +
+                "            \"ldp:membershipResource\": {\n" +
+                "                \"@id\": \"#5f31ea7b-144f-45b2-8899-0de92d99698a\"\n" +
+                "            },\n" +
+                "            \"@type\": [\n" +
+                "                \"ldp:DirectContainer\",\n" +
+                "                \"kerml:Branch\"\n" +
+                "            ],\n" +
+                "            \"ldp:hasMemberRelation\": \"kerml:revisions\",\n" +
+                "            \"@id\": \"5f31ea7b-144f-45b2-8899-0de92d99698a\",\n" +
+                "            \"@context\": \"twchost.com:8111/osmc/schemas/branchContainer\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"resourceID\": \"a3e235d0-8dff-4351-8bb4-c96f9ea1e8f5\",\n" +
+                "            \"createdDate\": 1600257292,\n" +
+                "            \"startRevision\": 1,\n" +
+                "            \"author\": \"lm392c\",\n" +
+                "            \"@type\": [\n" +
+                "                \"kerml:Branch\"\n" +
+                "            ],\n" +
+                "            \"authorInfo\": {\n" +
+                "                \"deleted\": false,\n" +
+                "                \"name\": \"lm392c\"\n" +
+                "            },\n" +
+                "            \"dcterms:title\": \"trunk\",\n" +
+                "            \"ID\": \"5f31ea7b-144f-45b2-8899-0de92d99698a\",\n" +
+                "            \"@id\": \"#5f31ea7b-144f-45b2-8899-0de92d99698a\",\n" +
+                "            \"latestRevision\": 3,\n" +
+                "            \"@context\": \"https://twchost.com:8111/osmc/schemas/branch\"\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    [\n" +
+                "        {\n" +
+                "            \"ldp:membershipResource\": {\n" +
+                "                \"@id\": \"#184bdb32-3959-4e23-b14f-346fbd26c0eb\"\n" +
+                "            },\n" +
+                "            \"@type\": [\n" +
+                "                \"ldp:DirectContainer\",\n" +
+                "                \"kerml:Branch\"\n" +
+                "            ],\n" +
+                "            \"ldp:hasMemberRelation\": \"kerml:revisions\",\n" +
+                "            \"@id\": \"184bdb32-3959-4e23-b14f-346fbd26c0eb\",\n" +
+                "            \"@context\": \"https://twchost.com:8111/osmc/schemas/branchContainer\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"resourceID\": \"a3e235d0-8dff-4351-8bb4-c96f9ea1e8f5\",\n" +
+                "            \"createdDate\": 1601477216,\n" +
+                "            \"startRevision\": 3,\n" +
+                "            \"author\": \"lm392c\",\n" +
+                "            \"@type\": [\n" +
+                "                \"kerml:Branch\"\n" +
+                "            ],\n" +
+                "            \"authorInfo\": {\n" +
+                "                \"deleted\": false,\n" +
+                "                \"name\": \"lm392c\"\n" +
+                "            },\n" +
+                "            \"dcterms:description\": \"Branch \\\"TestBranchRev3\\\" created\",\n" +
+                "            \"dcterms:title\": \"TestBranchRev3\",\n" +
+                "            \"ID\": \"184bdb32-3959-4e23-b14f-346fbd26c0eb\",\n" +
+                "            \"@id\": \"#184bdb32-3959-4e23-b14f-346fbd26c0eb\",\n" +
+                "            \"latestRevision\": 4,\n" +
+                "            \"@context\": \"https://twchost.com:8111/osmc/schemas/branch\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "]";
     }
 
     private Map<String, JSONObject> mapChildJsonObjects(JSONObject parent){

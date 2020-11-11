@@ -1,6 +1,6 @@
 package org.openmbee.syncservice.twc.sourcesink;
 
-import org.openmbee.syncservice.core.data.common.Branch;
+import org.openmbee.syncservice.core.data.branches.Branch;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
 import org.openmbee.syncservice.core.syntax.Syntax;
@@ -80,6 +80,19 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
         return result;
     }
 
+    @Override
+    public List<Branch> getBranches() {
+        JSONArray branchesJson = teamworkService.getBranches(sourceEndpoint);
+        if(branchesJson == null) {
+            return Collections.emptyList();
+        }
+        //Branches should be an array of arrays
+        List<Branch> branches = new ArrayList<>(branchesJson.length());
+        for (int i = 0; i < branchesJson.length(); i++) {
+            branches.add(parseBranch(branchesJson.getJSONArray(i)));
+        }
+        return branches;
+    }
 
 
     @Override
@@ -88,6 +101,10 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
         if(branchJson == null) {
             return null;
         }
+        return parseBranch(branchJson);
+    }
+
+    private Branch parseBranch(JSONArray branchJson) {
         Branch branch = new Branch();
         branch.setJson(branchJson);
         branch.setId(trimBranchId(jsonUtils.getStringFromArrayOfJSONObjects(branchJson, "ID")));

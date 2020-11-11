@@ -2,6 +2,7 @@ package org.openmbee.syncservice.mms.mms4.services;
 
 
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
+import org.openmbee.syncservice.core.data.branches.Branch;
 import org.openmbee.syncservice.core.utils.RestInterface;
 import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
 import org.json.JSONArray;
@@ -31,6 +32,12 @@ public class Mms4Service {
         return new JSONObject(response);
     }
 
+    public JSONObject getRefById(ProjectEndpoint endpoint, String refId) {
+        String response = restInterface.get(Mms4Endpoints.GET_REF.buildUrl(endpoint.getHost(), endpoint.getProject(), refId),
+                endpoint.getToken(), String.class);
+        return new JSONObject(response);
+    }
+
     public JSONObject getCommits(ProjectEndpoint endpoint, String ref) {
         String response = restInterface.get(Mms4Endpoints.GET_REF_COMMITS.buildUrl(endpoint.getHost(), endpoint.getProject(), ref),
                 endpoint.getToken(), String.class);
@@ -40,23 +47,29 @@ public class Mms4Service {
     public JSONObject getProject(ProjectEndpoint endpoint) {
         String response = restInterface.get(Mms4Endpoints.GET_PROJECT.buildUrl(endpoint.getHost(), endpoint.getProject()),
                 endpoint.getToken(), String.class);
-        return new JSONObject(response);
+        JSONObject responseObj = new JSONObject(response);
+        if(responseObj.has("projects") && !responseObj.isNull("projects")) {
+            JSONArray projects = responseObj.getJSONArray("projects");
+            if(projects.length() > 0) {
+                return projects.getJSONObject(0);
+            }
+        }
+        return null;
     }
 
-    public JSONObject getLatestReciprocatedCommit(ProjectEndpoint endpoint) {
-        //TODO expand to all branches
+    public JSONObject getLatestReciprocatedCommit(ProjectEndpoint endpoint,  Branch branch) {
         String response = restInterface.get(Mms4Endpoints.GET_TWC_REVISIONS.buildUrl(endpoint.getHost(),
-                endpoint.getProject(), "master", "true", "1"), endpoint.getToken(), String.class);
+                endpoint.getProject(), branch.getId(), "true", "1"), endpoint.getToken(), String.class);
         JSONArray array = new JSONArray(response);
-        if(array == null || array.length() == 0){
+        if(array.length() == 0){
             return null;
         }
         return array.getJSONObject(0);
     }
 
-    public JSONObject postAddedOrUpdatedElements(ProjectEndpoint endpoint, CommitChanges commitChanges) {
+    public JSONObject postAddedOrUpdatedElements(ProjectEndpoint endpoint, Branch branch, CommitChanges commitChanges) {
         String response = restInterface.post(Mms4Endpoints.POST_ELEMENTS.buildUrl(endpoint.getHost(), endpoint.getProject(),
-                commitChanges.getCommit().getBranchId()), endpoint.getToken(), MediaType.APPLICATION_JSON,
+                branch.getId()), endpoint.getToken(), MediaType.APPLICATION_JSON,
                 wrapAddedOrUpdatedElements(commitChanges).toString(), String.class);
         return new JSONObject(response);
     }
@@ -70,9 +83,9 @@ public class Mms4Service {
         return wrappedElements;
     }
 
-    public JSONObject deleteElements(ProjectEndpoint endpoint, CommitChanges commitChanges) {
+    public JSONObject deleteElements(ProjectEndpoint endpoint, Branch branch, CommitChanges commitChanges) {
         String response = restInterface.delete(Mms4Endpoints.DELETE_ELEMENTS.buildUrl(endpoint.getHost(), endpoint.getProject(),
-                commitChanges.getCommit().getBranchId()), endpoint.getToken(), MediaType.APPLICATION_JSON,
+                branch.getId()), endpoint.getToken(), MediaType.APPLICATION_JSON,
                 wrapElementIdsForDeletion(commitChanges.getDeletedElementIds()).toString(), String.class);
         return new JSONObject(response);
     }
@@ -89,4 +102,44 @@ public class Mms4Service {
 
         return wrappedArray;
     }
+
+    public JSONObject createBranch(ProjectEndpoint endpoint, String parentBranchId, String branchName, String branchId) {
+        JSONObject requestObj = createBranchRequest(parentBranchId, branchName, branchId);
+        String response = restInterface.post(Mms4Endpoints.CREATE_REFS.buildUrl(endpoint.getHost(),
+                endpoint.getProject()), endpoint.getToken(), MediaType.APPLICATION_JSON, requestObj.toString(),
+                String.class);
+        return new JSONObject(response);
+    }
+
+    private JSONObject createBranchRequest(String parentBranchId, String branchName, String branchId) {
+        JSONObject ref = new JSONObject();
+        ref.put("id", branchId);
+        ref.put("name", branchName);
+        ref.put("type", "Branch");
+        ref.put("parentRefId", parentBranchId);
+        JSONArray refs = new JSONArray();
+        refs.put(ref);
+        JSONObject pkg = new JSONObject();
+        pkg.put("refs", refs);
+        return pkg;
+    }
+
+    public String updateCommitWithTwcRevision(ProjectEndpoint endpoint, String twcCommitId, String mmsCommitId) {
+        return restInterface.put(Mms4Endpoints.UPDATE_TWC_REVISION.buildUrl(endpoint.getHost(), endpoint.getProject(),
+                mmsCommitId, twcCommitId), endpoint.getToken(), String.class);
+    }
+
+    public JSONObject getCommit(ProjectEndpoint endpoint, String commitId) {
+        String response = restInterface.get(Mms4Endpoints.GET_COMMIT.buildUrl(endpoint.getHost(), endpoint.getProject(), commitId),
+                endpoint.getToken(), String.class);
+        JSONObject responseObj = new JSONObject(response);
+        if(responseObj.has("commits") && !responseObj.isNull("commits")) {
+            JSONArray projects = responseObj.getJSONArray("commits");
+            if(projects.length() > 0) {
+                return projects.getJSONObject(0);
+            }
+        }
+        return null;
+    }
+
 }

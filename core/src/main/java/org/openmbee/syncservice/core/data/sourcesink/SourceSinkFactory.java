@@ -52,7 +52,7 @@ public class SourceSinkFactory { //Does not inherit from ISourceSinkFactory on p
         CommitReciprocityService commitReciprocityService = getCommitReciprocityService(flow.getSource(), flow.getSink())
                 .orElse(null);
         if(commitReciprocityService == null) {
-            logger.error("Could not create flow due to missing commit reciprocity service");
+            logger.error("Could not create reciprocated flow due to missing commit reciprocity service");
             return Optional.empty();
         }
 
@@ -65,11 +65,23 @@ public class SourceSinkFactory { //Does not inherit from ISourceSinkFactory on p
         Sink sink = getSink(sinkEndpoint).orElse(null);
 
         if(source == null || sink == null) {
-            logger.error("Could not create flow due to missing sink or source");
+            logger.error("Could not create flow due to missing:"
+            + (source == null ? " Source" : "")
+            + (sink == null ? " Sink" : ""));
             return Optional.empty();
         }
 
-        TranslationChain translationChain = translationChainService.getTranslationChain(source, sink);
-        return Optional.of(new Flow(translationChain.getSource(), translationChain.getTranslatingSink()));
+        if(!source.canSendTo(sink) || !sink.canReceiveFrom(source)) {
+            logger.error("Source and sink are not compatible.");
+            return Optional.empty();
+        }
+
+        try {
+            TranslationChain translationChain = translationChainService.getTranslationChain(source, sink);
+            return Optional.of(new Flow(translationChain.getSource(), translationChain.getTranslatingSink()));
+        } catch(Exception ex) {
+            logger.error("Could not create translation chain.");
+            return Optional.empty();
+        }
     }
 }

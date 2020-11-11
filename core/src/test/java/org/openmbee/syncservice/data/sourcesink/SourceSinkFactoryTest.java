@@ -148,6 +148,8 @@ public class SourceSinkFactoryTest {
 
         when(factory1.getSource(endpoint1)).thenReturn(source);
         when(factory2.getSink(endpoint2)).thenReturn(sink);
+        when(source.canSendTo(sink)).thenReturn(true);
+        when(sink.canReceiveFrom(source)).thenReturn(true);
 
         sourceSinkFactory.setSourceSinkFactories(List.of(factory1, factory2));
 
@@ -207,7 +209,7 @@ public class SourceSinkFactoryTest {
     }
 
     @Test
-    public void getRFlowTest1() {
+    public void getRFlowTest_Normal() {
         Source source = mock(Source.class);
         Sink sink = mock(Sink.class);
         Source tsource = mock(Source.class);
@@ -217,6 +219,8 @@ public class SourceSinkFactoryTest {
 
         when(factory1.getSource(endpoint1)).thenReturn(source);
         when(factory2.getSink(endpoint2)).thenReturn(sink);
+        when(source.canSendTo(sink)).thenReturn(true);
+        when(sink.canReceiveFrom(source)).thenReturn(true);
 
         sourceSinkFactory.setSourceSinkFactories(List.of(factory1, factory2));
 
@@ -237,7 +241,25 @@ public class SourceSinkFactoryTest {
     }
 
     @Test
-    public void getRFlowTest2() {
+    public void getRFlowTest_TranslationChainThrows() {
+        Source source = mock(Source.class);
+        Sink sink = mock(Sink.class);
+
+        when(factory1.getSource(endpoint1)).thenReturn(source);
+        when(factory2.getSink(endpoint2)).thenReturn(sink);
+        when(source.canSendTo(sink)).thenReturn(true);
+        when(sink.canReceiveFrom(source)).thenReturn(true);
+
+        sourceSinkFactory.setSourceSinkFactories(List.of(factory1, factory2));
+
+        when(translationChainService.getTranslationChain(source, sink)).thenThrow(new RuntimeException("Mock exception"));
+
+        ReciprocatedFlow flow = sourceSinkFactory.getReciprocatedFlow(endpoint1, endpoint2).orElse(null);
+        assertNull(flow);
+    }
+
+    @Test
+    public void getRFlowTest_NoReciprocityService() {
         Source source = mock(Source.class);
         Sink sink = mock(Sink.class);
         Source tsource = mock(Source.class);
@@ -246,6 +268,8 @@ public class SourceSinkFactoryTest {
 
         when(factory1.getSource(endpoint1)).thenReturn(source);
         when(factory2.getSink(endpoint2)).thenReturn(sink);
+        when(source.canSendTo(sink)).thenReturn(true);
+        when(sink.canReceiveFrom(source)).thenReturn(true);
 
         sourceSinkFactory.setSourceSinkFactories(List.of(factory1, factory2));
 
@@ -259,7 +283,55 @@ public class SourceSinkFactoryTest {
     }
 
     @Test
-    public void getRFlowTest3() {
+    public void getRFlowTest_SourceCantSend() {
+        Source source = mock(Source.class);
+        Sink sink = mock(Sink.class);
+        Source tsource = mock(Source.class);
+        TranslatingSink tsink = mock(TranslatingSink.class);
+        TranslationChain translationChain = mock(TranslationChain.class);
+
+        when(factory1.getSource(endpoint1)).thenReturn(source);
+        when(factory2.getSink(endpoint2)).thenReturn(sink);
+        when(source.canSendTo(sink)).thenReturn(false);
+        when(sink.canReceiveFrom(source)).thenReturn(true);
+
+        sourceSinkFactory.setSourceSinkFactories(List.of(factory1, factory2));
+
+        when(translationChainService.getTranslationChain(source, sink)).thenReturn(translationChain);
+        when(translationChain.getSource()).thenReturn(tsource);
+        when(translationChain.getTranslatingSink()).thenReturn(tsink);
+
+        ReciprocatedFlow flow = sourceSinkFactory.getReciprocatedFlow(endpoint1, endpoint2).orElse(null);
+
+        assertNull(flow);
+    }
+
+    @Test
+    public void getRFlowTest_SinkCantReceive() {
+        Source source = mock(Source.class);
+        Sink sink = mock(Sink.class);
+        Source tsource = mock(Source.class);
+        TranslatingSink tsink = mock(TranslatingSink.class);
+        TranslationChain translationChain = mock(TranslationChain.class);
+
+        when(factory1.getSource(endpoint1)).thenReturn(source);
+        when(factory2.getSink(endpoint2)).thenReturn(sink);
+        when(source.canSendTo(sink)).thenReturn(true);
+        when(sink.canReceiveFrom(source)).thenReturn(false);
+
+        sourceSinkFactory.setSourceSinkFactories(List.of(factory1, factory2));
+
+        when(translationChainService.getTranslationChain(source, sink)).thenReturn(translationChain);
+        when(translationChain.getSource()).thenReturn(tsource);
+        when(translationChain.getTranslatingSink()).thenReturn(tsink);
+
+        ReciprocatedFlow flow = sourceSinkFactory.getReciprocatedFlow(endpoint1, endpoint2).orElse(null);
+
+        assertNull(flow);
+    }
+
+    @Test
+    public void getRFlowTest_NoFactories() {
 
         sourceSinkFactory.setSourceSinkFactories(List.of());
 

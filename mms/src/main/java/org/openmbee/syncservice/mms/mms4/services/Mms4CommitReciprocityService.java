@@ -28,16 +28,21 @@ public class Mms4CommitReciprocityService implements CommitReciprocityService {
         ReciprocatedCommit latestReciprocatedCommit = sink.getLatestReciprocatedCommit();
 
         if(latestReciprocatedCommit != null) {
-            List<Commit> unreciprocatedSourceCommits = trimAtCommit(sourceCommits, latestReciprocatedCommit.getForeignCommitId());
-            List<Commit> unreciprocatedSinkCommits = trimAtCommit(sinkCommits, latestReciprocatedCommit.getLocalCommitId());
-            return new UnreciprocatedCommits(unreciprocatedSourceCommits, unreciprocatedSinkCommits);
+            List<Commit> unreciprocatedSourceCommits = trimAtCommit(sourceCommits, latestReciprocatedCommit.getSourceCommitId());
+            List<Commit> unreciprocatedSinkCommits = trimAtCommit(sinkCommits, latestReciprocatedCommit.getSinkCommitId());
+            return new UnreciprocatedCommits(latestReciprocatedCommit, unreciprocatedSourceCommits, unreciprocatedSinkCommits);
         } else {
             //If sink project is empty this is still ok
             if(sinkCommits.isEmpty() || (sinkCommits.size() == 1 && "cameo".equals(sink.getProjectSchema()))){
-                return new UnreciprocatedCommits(sourceCommits, sinkCommits);
+                return new UnreciprocatedCommits(null, sourceCommits, sinkCommits);
             }
             throw new RuntimeException("Endpoints have no reciprocated commits");
         }
+    }
+
+    @Override
+    public void registerReciprocatedCommit(String sourceCommitId, String sinkCommitId) {
+        sink.registerReciprocatedCommit(sourceCommitId, sinkCommitId);
     }
 
     private List<Commit> trimAtCommit(List<Commit> list, String commitId) {

@@ -1,6 +1,6 @@
 package org.openmbee.syncservice.translation;
 
-import org.openmbee.syncservice.core.data.common.Branch;
+import org.openmbee.syncservice.core.data.branches.Branch;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
@@ -38,32 +38,6 @@ public class TranslatingSinkTest {
 
 
     @Test
-    public void receiveBranchTest() {
-        String project = "project1";
-        Branch branch = mock(Branch.class);
-        Branch transBranch = mock(Branch.class);
-        Branch transBranch2 = mock(Branch.class);
-        when(translator1.translateBranch(branch)).thenReturn(transBranch);
-        when(translator2.translateBranch(transBranch)).thenReturn(transBranch2);
-        TranslatingSink t = new TranslatingSink(List.of(translator1, translator2), sink);
-
-        t.receiveBranch(project, branch);
-
-        verify(sink).receiveBranch(project, transBranch2);
-    }
-
-    @Test
-    public void receiveBranchTestNoChain() {
-        String project = "project1";
-        Branch branch = mock(Branch.class);
-        TranslatingSink t = new TranslatingSink(null, sink);
-
-        t.receiveBranch(project, branch);
-
-        verify(sink).receiveBranch(project, branch);
-    }
-
-    @Test
     public void getBranchByNameTest() {
         String name = "name";
         String name1 = "name1";
@@ -96,8 +70,8 @@ public class TranslatingSinkTest {
         CommitChanges changes1 = mock(CommitChanges.class);
         CommitChanges changes2 = mock(CommitChanges.class);
 
-        when(translator1.translateCommitChanges(source, branch, changes)).thenReturn(changes1);
-        when(translator2.translateCommitChanges(source, branch, changes1)).thenReturn(changes2);
+        when(translator1.translateCommitChanges(source, changes)).thenReturn(changes1);
+        when(translator2.translateCommitChanges(source,  changes1)).thenReturn(changes2);
         TranslatingSink t = new TranslatingSink(List.of(translator1, translator2), sink);
 
         t.commitChanges(source, branch, changes);

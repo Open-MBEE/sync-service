@@ -93,6 +93,7 @@ public class OnlyMainModelElementFilter extends JSONUtils implements ElementFilt
             return;
         } else if(mainModelEsiId != null) {
             logger.error("Cannot set main model more than once!");
+            return;
         }
         mainModelEsiId = esiId;
         modelPurgatory.forEach(this::addModel);

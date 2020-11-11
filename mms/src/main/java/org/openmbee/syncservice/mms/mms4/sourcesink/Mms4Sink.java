@@ -1,14 +1,13 @@
 package org.openmbee.syncservice.mms.mms4.sourcesink;
 
+import org.openmbee.syncservice.core.data.branches.BranchCreateRequest;
 import org.openmbee.syncservice.core.data.commits.Commit;
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
 import org.openmbee.syncservice.core.data.commits.ReciprocatedCommit;
-import org.openmbee.syncservice.core.data.common.Branch;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpointInterface;
-import org.openmbee.syncservice.core.data.sourcesink.Sink;
-import org.openmbee.syncservice.core.data.sourcesink.Source;
+import org.openmbee.syncservice.core.data.branches.Branch;
+import org.openmbee.syncservice.core.data.sourcesink.*;
 import org.openmbee.syncservice.core.syntax.Syntax;
+import org.openmbee.syncservice.core.utils.JSONUtils;
 import org.openmbee.syncservice.mms.mms4.MmsSyntax;
 import org.openmbee.syncservice.mms.mms4.services.Mms4Service;
 import org.openmbee.syncservice.mms.mms4.util.Mms4DateFormat;
@@ -19,9 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Mms4Sink implements ProjectEndpointInterface, Sink {
 
@@ -30,6 +29,7 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
     private ProjectEndpoint endpointConfig;
     private Mms4Service mms4Service;
     private Mms4DateFormat mms4DateFormat;
+    private JSONUtils jsonUtils;
 
     @Autowired
     public void setMms4Service(Mms4Service mms4Service) {
@@ -39,6 +39,11 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
     @Autowired
     public void setMms4DateFormat(Mms4DateFormat mms4DateFormat) {
         this.mms4DateFormat = mms4DateFormat;
+    }
+
+    @Autowired
+    public void setJsonUtils(JSONUtils jsonUtils) {
+        this.jsonUtils = jsonUtils;
     }
 
     public Mms4Sink(ProjectEndpoint endpointConfig) {
@@ -61,94 +66,261 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
         return MmsSyntax.MMS4;
     }
 
-    @Override
-    public void receiveBranch(String projectId, Branch branch) {
-        //TODO
-    }
+
 
     @Override
-    public void commitChanges(Source source, Branch branch, CommitChanges commitChanges) {
-        JSONObject addedOrUpdatedResponse = mms4Service.postAddedOrUpdatedElements(endpointConfig, commitChanges);
-        JSONObject deletedResponse = mms4Service.deleteElements(endpointConfig, commitChanges);
-        // why does this keep sending messages if it gets rejected objects back?
+    public List<String> commitChanges(Source source, Branch sinkBranch, CommitChanges commitChanges) {
+        List<String> commitIds = new ArrayList<>();
+        if(!commitChanges.getAddedElements().isEmpty() || !commitChanges.getUpdatedElements().isEmpty()) {
+            JSONObject addedOrUpdatedResponse = mms4Service.postAddedOrUpdatedElements(getEndpoint(), sinkBranch, commitChanges);
+            String commitId = getCommitIdFromElementsResponse(addedOrUpdatedResponse);
+            if(commitId != null) {
+                commitIds.add(commitId);
+                logger.info("Added/Updated Elements from " + commitChanges.getCommit().getCommitId() + " in " + commitId);
+            } else {
+                logger.info("Could not add or update elements from " + commitChanges.getCommit().getCommitId());
+                //TODO should we throw here?
+            }
+            warnRejectedElements(addedOrUpdatedResponse);
+        }
+        if(!commitChanges.getDeletedElementIds().isEmpty()) {
+            JSONObject deletedResponse = mms4Service.deleteElements(getEndpoint(), sinkBranch, commitChanges);
+            String commitId = getCommitIdFromElementsResponse(deletedResponse);
+            if(commitId != null) {
+                commitIds.add(commitId);
+                logger.info("Deleted Elements from " + commitChanges.getCommit().getCommitId() + " in " + commitId);
+            } else {
+                logger.info("Could not delete elements from " + commitChanges.getCommit().getCommitId());
+                //TODO should we throw here?
+            }
+            warnRejectedElements(deletedResponse);
+        }
+        return commitIds;
+    }
+
+    private void warnRejectedElements(JSONObject response) {
+        if(response == null){
+            return;
+        }
+        if(response.has("rejected") && !response.isNull("rejected")){
+            JSONArray rejected = response.getJSONArray("rejected");
+            if(rejected.length() > 0) {
+                logger.warn(rejected.length() + " elements were rejected by MMS");
+                //TODO is this ok or should we throw?
+            }
+        }
+    }
+
+    private String getCommitIdFromElementsResponse(JSONObject response) {
+        if(response == null){
+            return null;
+        }
+        if(response.has("commitId") && !response.isNull("commitId")){
+            return response.getString("commitId");
+        }
+        return null;
     }
 
     @Override
     public String toString() {
-        return String.format("Mms4Sink (%s/%s/%s)", endpointConfig.getHost(), endpointConfig.getCollection(),
-                endpointConfig.getProject());
+        return String.format("Mms4Sink (%s/%s/%s)", getEndpoint().getHost(), getEndpoint().getCollection(),
+                getEndpoint().getProject());
     }
 
     @Override
     public List<Commit> getCommitHistory() {
-        //TODO: expand to all branches
-        String branchId = "master";
-        String branchName = "master";
-        JSONObject jsonObject = mms4Service.getCommits(endpointConfig, branchId);
-        if(jsonObject == null) {
-            return null;
-        }
-        JSONArray commitsArray = jsonObject.getJSONArray("commits");
-        List<Commit> result = new ArrayList<>(commitsArray.length());
-        for (int i = 0; i < commitsArray.length(); ++i) {
-            JSONObject commitJson = commitsArray.getJSONObject(i);
-            Commit commit = new Commit();
-            commit.setBranchId(branchId);
-            commit.setBranchName(branchName);
-            commit.setCommitDate(parseDate(commitJson.getString("_created")));
-            commit.setCommitId(commitJson.getString("id"));
-            result.add(commit);
+        Collection<Branch> branches = getBranches();
+        List<Commit> result = new ArrayList<>();
+        for (Branch branch : branches) {
+            JSONObject jsonObject = mms4Service.getCommits(getEndpoint(), branch.getId());
+            if(jsonObject == null) {
+                continue;
+            }
+            JSONArray commitsArray = jsonObject.getJSONArray("commits");
+            for (int i = 0; i < commitsArray.length(); ++i) {
+                JSONObject commitJson = commitsArray.getJSONObject(i);
+                Commit commit = new Commit();
+                commit.setBranchId(branch.getId());
+                commit.setBranchName(branch.getName());
+                commit.setCommitDate(parseDate(commitJson.getString("_created")));
+                commit.setCommitId(commitJson.getString("id"));
+                result.add(commit);
+            }
         }
         return result;
     }
 
+    @Override
+    public List<Commit> getBranchCommitHistory(String branchId, int limit) {
+        Branch branch = getBranchById(branchId);
+        List<Commit> result = new ArrayList<>();
+        JSONObject jsonObject = mms4Service.getCommits(getEndpoint(), branchId);
+        if(jsonObject == null) {
+            return null;
+        }
+        JSONArray commitsArray = jsonObject.getJSONArray("commits");
+        for (int i = 0; i < commitsArray.length(); ++i) {
+            if(result.size() >= limit) {
+                break;
+            }
+            JSONObject commitJson = commitsArray.getJSONObject(i);
+            Commit commit = new Commit();
+            commit.setBranchId(branchId);
+            commit.setBranchName(branch != null ? branch.getName() : null);
+            commit.setCommitDate(parseDate(commitJson.getString("_created")));
+            commit.setCommitId(commitJson.getString("id"));
+            result.add(commit);
+        }
+
+        return result;
+    }
+
+
+    @Override
+    public Commit getCommitById(String commitId) {
+        JSONObject commitJson = mms4Service.getCommit(getEndpoint(), commitId);
+        if(commitJson == null) {
+            return null;
+        }
+        String branchId = commitJson.getString("_refId");
+        Branch branch = getBranchById(branchId);
+
+        Commit commit = new Commit();
+        commit.setBranchId(branchId);
+        commit.setBranchName(branch != null ? branch.getName() : null);
+        commit.setCommitDate(parseDate(commitJson.getString("_created")));
+        commit.setCommitId(commitId);
+        return commit;
+    }
+
+
+
     public ReciprocatedCommit getLatestReciprocatedCommit() {
-        JSONObject commit = mms4Service.getLatestReciprocatedCommit(endpointConfig);
-        if(commit == null ||  !commit.has("twc-revisionId")) {
+        //TODO should add new endpoint in MMS to make this less clunky
+        Collection<Branch> branches = getBranches();
+        JSONObject latestCommit = null;
+        Date latestCommitDate = null;
+
+        for (Branch branch : branches) {
+            JSONObject commit = mms4Service.getLatestReciprocatedCommit(getEndpoint(), branch);
+            if(commit == null ||  !commit.has("twc-revisionId")) {
+                continue;
+            }
+            Date commitDate = parseDate(commit.getString("_created"));
+            if(commitDate == null) {
+                continue;
+            }
+            if(latestCommitDate == null) {
+                latestCommit = commit;
+                latestCommitDate = commitDate;
+            } else if(latestCommitDate.before(commitDate)) {
+                latestCommit = commit;
+                latestCommitDate = commitDate;
+            }
+        }
+
+        if(latestCommit == null) {
             return null;
         }
 
         ReciprocatedCommit reciprocatedCommit = new ReciprocatedCommit();
-        reciprocatedCommit.setForeignCommitId(commit.getString("twc-revisionId"));
-        reciprocatedCommit.setLocalCommitId(commit.getString("id"));
+        reciprocatedCommit.setSourceCommitId(latestCommit.getString("twc-revisionId"));
+        reciprocatedCommit.setSinkCommitId(latestCommit.getString("id"));
         return reciprocatedCommit;
+    }
+
+    public void registerReciprocatedCommit(String foreignCommitId, String localCommitId) {
+        String response = mms4Service.updateCommitWithTwcRevision(getEndpoint(), foreignCommitId, localCommitId);
+        //TODO should this throw if not successful?
+    }
+
+    @Override
+    public Collection<Branch> getBranches() {
+        JSONObject refs = mms4Service.getRefs(getEndpoint());
+        if(refs == null || !refs.has("refs")) {
+            return Collections.emptyList();
+        }
+
+        JSONArray refsArray = refs.getJSONArray("refs");
+        List<Branch> branches = new ArrayList<>(refsArray.length());
+        for(int i = 0; i < refsArray.length(); ++i) {
+            JSONObject ref = refsArray.getJSONObject(i);
+            branches.add(parseBranch(ref));
+        }
+        return branches;
     }
 
     @Override
     public Branch getBranchByName(String branchName) {
-        JSONObject refs = mms4Service.getRefs(endpointConfig);
-        if(refs == null) {
+        JSONObject refs = mms4Service.getRefs(getEndpoint());
+        if(refs == null || !refs.has("refs")) {
             return null;
         }
 
         JSONArray refsArray = refs.getJSONArray("refs");
-        if(refsArray == null) {
-            return null;
-        }
-
         for(int i = 0; i < refsArray.length(); ++i) {
             JSONObject ref = refsArray.getJSONObject(i);
-            if(ref == null) {
-                continue;
-            }
             String name = ref.getString("name");
             if(branchName.equals(name)) {
-                Branch result = new Branch();
-                result.setId(ref.getString("id"));
-                result.setName(name);
-                if(ref.has("parentRefId") && ! ref.isNull("parentRefId")) {
-                    result.setParentBranchId(ref.getString("parentRefId"));
-                    result.setOriginCommit(ref.getString("parentCommitId"));
-                }
-                result.setJson(ref);
-                return result;
+                return parseBranch(ref);
             }
         }
         return null;
     }
 
+    @Override
+    public Branch getBranchById(String branchId) {
+        JSONObject refs = mms4Service.getRefById(getEndpoint(), branchId);
+        if(refs == null || !refs.has("refs")) {
+            return null;
+        }
+
+        JSONArray refsArray = refs.getJSONArray("refs");
+        if(refsArray.length() > 0) {
+            return parseBranch(refsArray.getJSONObject(0));
+        }
+        return null;
+    }
+
+    private Branch parseBranch(JSONObject ref) {
+        Branch result = new Branch();
+        result.setId(ref.getString("id"));
+        result.setName(ref.getString("name"));
+        if(ref.has("parentRefId") && ! ref.isNull("parentRefId")) {
+            result.setParentBranchId(ref.getString("parentRefId"));
+            result.setOriginCommit(ref.getString("parentCommitId"));
+        }
+        result.setJson(ref);
+        return result;
+    }
+
+    @Override
+    public Branch createBranch(BranchCreateRequest branchCreateRequest) {
+        JSONObject refs = mms4Service.createBranch(getEndpoint(), branchCreateRequest.getParentBranchId(),
+                branchCreateRequest.getBranchName(), branchCreateRequest.getBranchId());
+        if(refs == null || !refs.has("refs")) {
+            return null;
+        }
+
+        JSONArray refsArray = refs.getJSONArray("refs");
+        //There should only be one (or zero if rejected)
+        for(int i = 0; i < refsArray.length(); ++i) {
+            JSONObject ref = refsArray.getJSONObject(i);
+            return parseBranch(ref);
+        }
+        return null;
+    }
+
+    @Override
+    public boolean canCreateHistoricBranches() {
+        return false;
+    }
+
     public String getProjectSchema() {
         JSONObject project = mms4Service.getProject(getEndpoint());
+        if(project == null || !project.has("schema"))
+            return null;
+
         return project.getString("schema");
     }
 
@@ -160,5 +332,7 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
             return null;
         }
     }
+
+
 }
 

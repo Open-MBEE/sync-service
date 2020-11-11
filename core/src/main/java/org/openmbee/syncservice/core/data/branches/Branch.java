@@ -1,4 +1,4 @@
-package org.openmbee.syncservice.core.data.common;
+package org.openmbee.syncservice.core.data.branches;
 
 public class Branch {
     private String id;

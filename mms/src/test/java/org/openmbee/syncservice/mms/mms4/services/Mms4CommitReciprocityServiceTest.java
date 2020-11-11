@@ -47,8 +47,8 @@ public class Mms4CommitReciprocityServiceTest {
         when(sink.getCommitHistory()).thenReturn(List.of(commitb4, commitb3, commitb2, commitb1));
 
         ReciprocatedCommit rc = new ReciprocatedCommit();
-        rc.setForeignCommitId("a2");
-        rc.setLocalCommitId("b2");
+        rc.setSourceCommitId("a2");
+        rc.setSinkCommitId("b2");
         when(sink.getLatestReciprocatedCommit()).thenReturn(rc);
 
         UnreciprocatedCommits unreciprocatedCommits = mms4CommitReciprocityService
@@ -151,8 +151,8 @@ public class Mms4CommitReciprocityServiceTest {
         when(sink.getCommitHistory()).thenReturn(List.of(commitb4, commitb3, commitb2, commitb1));
 
         ReciprocatedCommit rc = new ReciprocatedCommit();
-        rc.setForeignCommitId("a2");
-        rc.setLocalCommitId("doesn't exist");
+        rc.setSourceCommitId("a2");
+        rc.setSinkCommitId("doesn't exist");
         when(sink.getLatestReciprocatedCommit()).thenReturn(rc);
 
         try {

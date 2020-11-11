@@ -123,6 +123,21 @@ public class JSONUtilsTest {
             Integer s = jsonUtils.getIntFromArrayOfJSONObjects(new JSONArray("[{},{'key':'val'}]"), "key");
             fail("Should have thrown...");
         } catch(Exception ex) {}
+    }
 
+    @Test
+    public void flattenObjectArrayTest1() {
+        String json = "[{'id':'1'},{'id':'2','me':'3'},{'you':'4'}]";
+        JSONArray array = new JSONArray(json);
+        List<String> flattened = jsonUtils.flattenObjectArray(array, "id");
+        assertEquals(2,flattened.size());
+        assertEquals("1", flattened.get(0));
+        assertEquals("2", flattened.get(1));
+    }
+
+    @Test
+    public void flattenObjectArrayTest2() {
+        List<String> flattened = jsonUtils.flattenObjectArray(null, "id");
+        assertNull(flattened);
     }
 }

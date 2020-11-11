@@ -33,19 +33,6 @@ public class JSONUtils {
         return strList;
     }
 
-    public <T> T getObjectFromArrayOfJSONObjects(JSONArray array, String key) {
-        if(array == null) {
-            return null;
-        }
-        for (int j = 0; j < array.length(); j++) {
-            JSONObject arrayObj = array.getJSONObject(j);
-            if(arrayObj.has(key)) {
-                return (T) arrayObj.get(key);
-            }
-        }
-        return null;
-    }
-
     public String getStringFromArrayOfJSONObjects(JSONArray array, String key) {
         if(array == null) {
             return null;

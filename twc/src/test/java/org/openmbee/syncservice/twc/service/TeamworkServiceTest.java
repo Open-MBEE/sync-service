@@ -117,6 +117,57 @@ public class TeamworkServiceTest {
     }
 
     @Test
+    public void getBranches_Null() {
+        String json = null;
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNull(array);
+    }
+
+    @Test
+    public void getBranches_Empty() {
+        String json = "";
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNull(array);
+    }
+
+    @Test
+    public void getBranches_Missing() {
+        String json = "{}";
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNull(array);
+    }
+
+    @Test
+    public void getBranches_InternalNull() {
+        String json = "{\"ldp:contains\":null}";
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNull(array);
+    }
+
+    @Test
+    public void getBranches_Normal() {
+        String json = "{\"ldp:contains\":[{}]}";
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNotNull(array);
+        assertEquals(1, array.length());
+    }
+
+    @Test
     public void getBranchByIdTest() {
         String branchId = "thebranch";
         String json = "[{'part1':{}},{'part2':{}}]";

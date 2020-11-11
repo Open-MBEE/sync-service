@@ -1,13 +1,13 @@
 package org.openmbee.syncservice.core.translation;
 
-import org.openmbee.syncservice.core.data.common.Branch;
-import org.openmbee.syncservice.core.data.sourcesink.Sink;
-import org.openmbee.syncservice.core.data.sourcesink.SinkDecorator;
-import org.openmbee.syncservice.core.data.sourcesink.Source;
+import org.openmbee.syncservice.core.data.branches.Branch;
+import org.openmbee.syncservice.core.data.branches.BranchCreateRequest;
+import org.openmbee.syncservice.core.data.sourcesink.*;
 import org.openmbee.syncservice.core.syntax.Syntax;
 import org.openmbee.syncservice.core.data.commits.Commit;
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -31,14 +31,19 @@ public class TranslatingSink implements Sink, SinkDecorator {
     }
 
     @Override
-    public void receiveBranch(String projectId, Branch branch) {
-        Branch translatedBranch = branch;
+    public Branch createBranch(BranchCreateRequest branchCreateRequest) {
+        BranchCreateRequest translatedBranchCreateRequest = branchCreateRequest;
         if(translationChain != null) {
             for(Translator translator : translationChain) {
-                translatedBranch = translator.translateBranch(translatedBranch);
+                translatedBranchCreateRequest = translator.translateBranchCreateRequest(translatedBranchCreateRequest);
             }
         }
-        sink.receiveBranch(projectId, translatedBranch);
+        return sink.createBranch(translatedBranchCreateRequest);
+    }
+
+    @Override
+    public boolean canCreateHistoricBranches() {
+        return getSink().canCreateHistoricBranches();
     }
 
     @Override
@@ -58,6 +63,26 @@ public class TranslatingSink implements Sink, SinkDecorator {
     }
 
     @Override
+    public List<Commit> getBranchCommitHistory(String branchId, int limit) {
+        return getSink().getBranchCommitHistory(branchId, limit);
+    }
+
+    @Override
+    public Commit getCommitById(String commitId) {
+        return getSink().getCommitById(commitId);
+    }
+
+    @Override
+    public Branch getBranchById(String branchId) {
+        return getSink().getBranchById(branchId);
+    }
+
+    @Override
+    public Collection<Branch> getBranches() {
+        return getSink().getBranches();
+    }
+
+    @Override
     public Branch getBranchByName(String branchName) {
         String translatedBranchName = branchName;
         if(translationChain != null) {
@@ -69,14 +94,14 @@ public class TranslatingSink implements Sink, SinkDecorator {
     }
 
     @Override
-    public void commitChanges(Source source, Branch branch, CommitChanges commitChanges) {
+    public List<String> commitChanges(Source source, Branch sinkBranch, CommitChanges commitChanges) {
         CommitChanges translatedCommitChanges = commitChanges;
         if(translationChain != null) {
             for(Translator translator : translationChain) {
-                translatedCommitChanges = translator.translateCommitChanges(source, branch, translatedCommitChanges);
+                translatedCommitChanges = translator.translateCommitChanges(source,  translatedCommitChanges);
             }
         }
-        sink.commitChanges(source, branch, translatedCommitChanges);
+        return sink.commitChanges(source, sinkBranch, translatedCommitChanges);
     }
 
     @Override

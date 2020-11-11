@@ -86,6 +86,19 @@ public class TeamworkService {
 		return new JSONArray(json);
 	}
 
+	public JSONArray getBranches(ProjectEndpoint endpoint) {
+		String json =  restInterface.get(TeamworkCloudEndpoints.GET_BRANCHES.buildUrl(endpoint.getHost(),
+				endpoint.getCollection(), endpoint.getProject(), "true"), endpoint.getToken(), String.class);
+		if(json == null || json.isEmpty()) {
+			return null;
+		}
+		JSONObject returnedObject = new JSONObject(json);
+		if(returnedObject.has("ldp:contains") && ! returnedObject.isNull("ldp:contains")) {
+			return returnedObject.getJSONArray("ldp:contains");
+		}
+		return null;
+	}
+
 	public JSONArray getBranchById(ProjectEndpoint endpoint, String branchId) {
 		String json =  restInterface.get(TeamworkCloudEndpoints.GET_BRANCH.buildUrl(endpoint.getHost(),
 				endpoint.getCollection(), endpoint.getProject(), branchId), endpoint.getToken(), String.class);
@@ -106,25 +119,4 @@ public class TeamworkService {
 		}
 		return null;
 	}
-
-
-//	/**
-//	 * This method checks whether an MMS Host is associated with a TWC Host name
-//	 * for syncing the data
-//	 * @param twcUrl
-//	 * @param mmsUrl
-//	 * @return
-//	 */
-//	@Override
-//	public boolean isTwcMMSSyncEnabled(String twcUrl, String mmsUrl){
-//		boolean isSyncEnabled = false;
-//		TWCInstance twcInstance = twcConfig.getTwcInstance(twcUrl);
-//		if(twcInstance == null){ return false; }
-//
-//		if(twcInstance.getHost().equals(twcUrl.toLowerCase()) &&
-//				twcInstance.getTwcAssociatedMmsHostList().contains(mmsUrl.toLowerCase()) )
-//			isSyncEnabled = true;
-//
-//		return isSyncEnabled;
-//	}
 }
