@@ -1,16 +1,16 @@
 package org.openmbee.syncservice.data.sourcesink;
 
-import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
-import org.openmbee.syncservice.core.data.sourcesink.*;
-import org.openmbee.syncservice.core.translation.TranslatingSink;
-import org.openmbee.syncservice.core.translation.TranslationChain;
-import org.openmbee.syncservice.core.translation.TranslationChainService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
+import org.openmbee.syncservice.core.data.sourcesink.*;
+import org.openmbee.syncservice.core.translation.TranslatingSink;
+import org.openmbee.syncservice.core.translation.TranslationChain;
+import org.openmbee.syncservice.core.translation.TranslationChainService;
 
 import java.util.List;
 

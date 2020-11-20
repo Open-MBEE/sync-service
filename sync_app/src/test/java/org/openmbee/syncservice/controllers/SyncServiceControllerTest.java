@@ -6,7 +6,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.openmbee.syncservice.core.data.sourcesink.*;
+import org.openmbee.syncservice.core.data.sourcesink.Flow;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.data.sourcesink.SourceSinkFactory;
 import org.openmbee.syncservice.core.queue.service.QueuingService;
 
 import javax.servlet.http.HttpServletResponse;

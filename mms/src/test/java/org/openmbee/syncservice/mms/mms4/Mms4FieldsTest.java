@@ -10,7 +10,8 @@ import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.core.syntax.fields.FieldId;
 import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class Mms4FieldsTest {

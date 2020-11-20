@@ -1,12 +1,12 @@
 package org.openmbee.syncservice.translation.twc19_3tomms4;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.syntax.Fields;
 import org.openmbee.syncservice.core.syntax.Parser;
 import org.openmbee.syncservice.core.syntax.fields.CommonFields;
 import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.openmbee.syncservice.translation.twc19_3tomms4.valuebuilders.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,11 +1,11 @@
 package org.openmbee.syncservice.jobs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openmbee.syncservice.controllers.ProjectSyncRequest;
 import org.openmbee.syncservice.core.data.jobs.Job;
 import org.openmbee.syncservice.core.data.jobs.JobFactory;
 import org.openmbee.syncservice.core.data.sourcesink.ReciprocatedFlow;
 import org.openmbee.syncservice.core.data.sourcesink.SourceSinkFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

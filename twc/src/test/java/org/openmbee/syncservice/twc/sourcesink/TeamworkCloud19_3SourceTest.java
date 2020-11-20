@@ -1,11 +1,5 @@
 package org.openmbee.syncservice.twc.sourcesink;
 
-import org.openmbee.syncservice.core.data.branches.Branch;
-import org.openmbee.syncservice.core.utils.JSONUtils;
-import org.openmbee.syncservice.core.data.commits.Commit;
-import org.openmbee.syncservice.core.data.commits.CommitChanges;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.twc.service.TeamworkService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -14,6 +8,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.openmbee.syncservice.core.data.branches.Branch;
+import org.openmbee.syncservice.core.data.commits.Commit;
+import org.openmbee.syncservice.core.data.commits.CommitChanges;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.utils.JSONUtils;
+import org.openmbee.syncservice.twc.service.TeamworkService;
 
 import java.util.*;
 

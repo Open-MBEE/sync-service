@@ -1,11 +1,5 @@
 package org.openmbee.syncservice.mms.mms4.services;
 
-import org.openmbee.syncservice.core.data.branches.Branch;
-import org.openmbee.syncservice.core.data.commits.Commit;
-import org.openmbee.syncservice.core.data.commits.CommitChanges;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.core.utils.RestInterface;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,16 +7,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.openmbee.syncservice.core.data.branches.Branch;
+import org.openmbee.syncservice.core.data.commits.Commit;
+import org.openmbee.syncservice.core.data.commits.CommitChanges;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.utils.RestInterface;
 import org.springframework.http.MediaType;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 public class Mms4ServiceTest {
 

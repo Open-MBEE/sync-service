@@ -1,14 +1,13 @@
 package org.openmbee.syncservice.core.data.services;
 
-import org.openmbee.syncservice.core.data.jobs.Job;
-import org.openmbee.syncservice.core.data.jobs.JobFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-
+import org.openmbee.syncservice.core.data.jobs.Job;
+import org.openmbee.syncservice.core.data.jobs.JobFactory;
 
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;

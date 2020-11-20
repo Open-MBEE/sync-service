@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.openmbee.syncservice.controllers.ProjectSyncRequest;
-import org.openmbee.syncservice.core.data.commits.ReciprocatedCommit;
 import org.openmbee.syncservice.core.data.jobs.Job;
 import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
 import org.openmbee.syncservice.core.data.sourcesink.ReciprocatedFlow;
@@ -18,7 +17,8 @@ import org.springframework.context.ApplicationContext;
 
 import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 

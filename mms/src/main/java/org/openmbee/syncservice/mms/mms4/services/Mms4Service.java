@@ -1,12 +1,12 @@
 package org.openmbee.syncservice.mms.mms4.services;
 
 
-import org.openmbee.syncservice.core.data.commits.CommitChanges;
-import org.openmbee.syncservice.core.data.branches.Branch;
-import org.openmbee.syncservice.core.utils.RestInterface;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.openmbee.syncservice.core.data.branches.Branch;
+import org.openmbee.syncservice.core.data.commits.CommitChanges;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.utils.RestInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +38,8 @@ public class Mms4Service {
         return new JSONObject(response);
     }
 
-    public JSONObject getCommits(ProjectEndpoint endpoint, String ref) {
-        String response = restInterface.get(Mms4Endpoints.GET_REF_COMMITS.buildUrl(endpoint.getHost(), endpoint.getProject(), ref),
+    public JSONObject getCommits(ProjectEndpoint endpoint, String refId) {
+        String response = restInterface.get(Mms4Endpoints.GET_REF_COMMITS.buildUrl(endpoint.getHost(), endpoint.getProject(), refId),
                 endpoint.getToken(), String.class);
         return new JSONObject(response);
     }

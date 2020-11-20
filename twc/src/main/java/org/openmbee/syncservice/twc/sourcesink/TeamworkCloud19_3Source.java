@@ -1,24 +1,27 @@
 package org.openmbee.syncservice.twc.sourcesink;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.data.branches.Branch;
+import org.openmbee.syncservice.core.data.commits.Commit;
+import org.openmbee.syncservice.core.data.commits.CommitChanges;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpointInterface;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
 import org.openmbee.syncservice.core.syntax.Syntax;
 import org.openmbee.syncservice.core.utils.JSONUtils;
-import org.openmbee.syncservice.core.data.commits.Commit;
-import org.openmbee.syncservice.core.data.commits.CommitChanges;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpointInterface;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
 import org.openmbee.syncservice.twc.filter.ElementFilter;
 import org.openmbee.syncservice.twc.filter.OnlyMainModelElementFilter;
 import org.openmbee.syncservice.twc.service.TeamworkService;
 import org.openmbee.syncservice.twc.syntax.TwcSyntax;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -61,7 +64,8 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
             JSONObject commitJson = commits.getJSONObject(i);
             Commit commit = new Commit();
             commit.setCommitId(String.valueOf(commitJson.get("ID")));
-            commit.setCommitDate(new Date(commitJson.getLong("createdDate")*1000));
+            Instant instant = Instant.ofEpochMilli(commitJson.getLong("createdDate")*1000);
+            commit.setCommitDate(ZonedDateTime.ofInstant(instant, ZoneId.systemDefault()));
             commit.setBranchId(commitJson.getString("branchID"));
             commit.setParentCommit(String.valueOf(commitJson.get("directParent")));
 

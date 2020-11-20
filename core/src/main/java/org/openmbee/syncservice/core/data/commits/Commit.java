@@ -1,11 +1,11 @@
 package org.openmbee.syncservice.core.data.commits;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 
-public class Commit {
+public class Commit implements Comparable<Commit> {
     private String commitId;
-    private Date commitDate;
+    private ZonedDateTime commitDate;
     private String branchId;
     private String branchName;
     private String parentCommit;
@@ -18,11 +18,11 @@ public class Commit {
         this.commitId = commitId;
     }
 
-    public Date getCommitDate() {
+    public ZonedDateTime getCommitDate() {
         return commitDate;
     }
 
-    public void setCommitDate(Date commitDate) {
+    public void setCommitDate(ZonedDateTime commitDate) {
         this.commitDate = commitDate;
     }
 
@@ -61,5 +61,32 @@ public class Commit {
     @Override
     public int hashCode() {
         return Objects.hash(commitId);
+    }
+
+    @Override
+    public int compareTo(Commit o) {
+        if(this.equals(o)) {
+            return 0;
+        } else {
+            int result = this.getCommitDate().compareTo(o.getCommitDate());
+
+            // handle edge case of dates being the same
+            if(result == 0) {
+                result = this.getCommitId().compareTo(o.getCommitId());
+            }
+
+            if(result == 0) {
+                result = this.getBranchId().compareTo(o.getBranchId());
+            }
+
+            if(result == 0) {
+                result = this.getBranchName().compareTo(o.getBranchName());
+            }
+
+            if(result == 0) {
+                result = this.getParentCommit().compareTo(o.getParentCommit());
+            }
+            return result;
+        }
     }
 }

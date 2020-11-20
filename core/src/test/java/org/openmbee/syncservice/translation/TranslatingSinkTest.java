@@ -1,20 +1,20 @@
 package org.openmbee.syncservice.translation;
 
-import org.openmbee.syncservice.core.data.branches.Branch;
-import org.openmbee.syncservice.core.data.sourcesink.Sink;
-import org.openmbee.syncservice.core.data.commits.CommitChanges;
-import org.openmbee.syncservice.core.data.sourcesink.Source;
-import org.openmbee.syncservice.core.translation.TranslatingSink;
-import org.openmbee.syncservice.core.translation.Translator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.openmbee.syncservice.core.data.branches.Branch;
+import org.openmbee.syncservice.core.data.commits.CommitChanges;
+import org.openmbee.syncservice.core.data.sourcesink.Sink;
+import org.openmbee.syncservice.core.data.sourcesink.Source;
+import org.openmbee.syncservice.core.translation.TranslatingSink;
+import org.openmbee.syncservice.core.translation.Translator;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.*;
 
 public class TranslatingSinkTest {

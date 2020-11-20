@@ -1,14 +1,12 @@
 package org.openmbee.syncservice.twc.service;
 
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.openmbee.syncservice.core.utils.RestInterface;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.twc.TeamworkCloudEndpoints;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.utils.JSONUtils;
+import org.openmbee.syncservice.core.utils.RestInterface;
+import org.openmbee.syncservice.twc.TeamworkCloudEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import org.openmbee.syncservice.core.utils.JSONUtils;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * TeamworkService class is used to make GET requests to Teamwork Cloud REST APIs   

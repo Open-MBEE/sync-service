@@ -1,14 +1,14 @@
 package org.openmbee.syncservice.core.queue.service;
 
-import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_END_LOG;
-import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_START_LOG;
-
-import java.io.IOException;
-
 import org.openmbee.syncservice.core.queue.dto.QueueDetailsResponseTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+
+import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_END_LOG;
+import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_START_LOG;
 
 public abstract class QueuingService  {
 

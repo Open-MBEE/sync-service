@@ -1,9 +1,9 @@
 package org.openmbee.syncservice.core.translation.elements;
 
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.core.syntax.fields.FieldId;
 import org.openmbee.syncservice.core.translation.Translator;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

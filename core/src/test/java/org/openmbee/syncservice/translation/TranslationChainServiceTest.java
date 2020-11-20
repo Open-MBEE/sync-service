@@ -1,16 +1,16 @@
 package org.openmbee.syncservice.translation;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
 import org.openmbee.syncservice.core.syntax.Syntax;
 import org.openmbee.syncservice.core.translation.TranslationChain;
 import org.openmbee.syncservice.core.translation.TranslationChainService;
 import org.openmbee.syncservice.core.translation.Translator;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.util.List;
 

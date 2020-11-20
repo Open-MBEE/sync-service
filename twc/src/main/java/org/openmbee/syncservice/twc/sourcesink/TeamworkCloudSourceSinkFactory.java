@@ -1,10 +1,10 @@
 package org.openmbee.syncservice.twc.sourcesink;
 
+import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
+import org.openmbee.syncservice.core.data.sourcesink.ISourceSinkFactory;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
-import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.core.data.sourcesink.ISourceSinkFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;

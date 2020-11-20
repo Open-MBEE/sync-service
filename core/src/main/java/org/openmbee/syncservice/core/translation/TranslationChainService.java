@@ -1,14 +1,13 @@
 package org.openmbee.syncservice.core.translation;
 
-import org.openmbee.syncservice.core.data.sourcesink.Sink;
-import org.openmbee.syncservice.core.data.sourcesink.Source;
-import org.openmbee.syncservice.core.syntax.Syntax;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.builder.GraphBuilder;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
-
+import org.openmbee.syncservice.core.data.sourcesink.Sink;
+import org.openmbee.syncservice.core.data.sourcesink.Source;
+import org.openmbee.syncservice.core.syntax.Syntax;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,11 +1,11 @@
 package org.openmbee.syncservice.core.data.sourcesink;
 
+import org.openmbee.syncservice.core.data.branches.Branch;
 import org.openmbee.syncservice.core.data.commits.Commit;
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
-import org.openmbee.syncservice.core.data.branches.Branch;
 import org.openmbee.syncservice.core.syntax.Syntax;
 
-import java.util.*;
+import java.util.List;
 
 public interface Source {
 

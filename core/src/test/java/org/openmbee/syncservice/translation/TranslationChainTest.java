@@ -1,10 +1,10 @@
 package org.openmbee.syncservice.translation;
 
+import org.junit.Test;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
 import org.openmbee.syncservice.core.translation.TranslationChain;
 import org.openmbee.syncservice.core.translation.Translator;
-import org.junit.Test;
 
 import java.util.List;
 

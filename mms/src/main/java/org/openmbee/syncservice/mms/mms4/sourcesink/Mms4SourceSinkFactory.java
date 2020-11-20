@@ -1,8 +1,8 @@
 package org.openmbee.syncservice.mms.mms4.sourcesink;
 
 import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
-import org.openmbee.syncservice.mms.mms4.services.Mms4CommitReciprocityService;
 import org.openmbee.syncservice.core.data.sourcesink.*;
+import org.openmbee.syncservice.mms.mms4.services.Mms4CommitReciprocityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;

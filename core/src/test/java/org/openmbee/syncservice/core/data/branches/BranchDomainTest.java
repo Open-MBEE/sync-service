@@ -34,8 +34,7 @@ public class BranchDomainTest {
 
     @Test
     public void checkForAndCreateHistoricBranches_NoReciprocatedCommits() {
-        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits(null,
-                Collections.emptyList(), Collections.emptyList());
+        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
         //This should just do nothing, not throw
         branchDomain.checkForAndCreateHistoricBranches(unreciprocatedCommits, Collections.emptyMap(), sink);
 
@@ -47,8 +46,8 @@ public class BranchDomainTest {
         ReciprocatedCommit lastReciprocatedCommit = new ReciprocatedCommit();
         lastReciprocatedCommit.setSourceCommitId("source0");
         lastReciprocatedCommit.setSinkCommitId("sink0");
-        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits(lastReciprocatedCommit,
-                Collections.emptyList(), Collections.emptyList());
+        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
+        unreciprocatedCommits.addLastReciprocatedCommit(lastReciprocatedCommit);
         //This should just do nothing, not throw
         branchDomain.checkForAndCreateHistoricBranches(unreciprocatedCommits, Collections.emptyMap(), sink);
 
@@ -60,8 +59,8 @@ public class BranchDomainTest {
         ReciprocatedCommit lastReciprocatedCommit = new ReciprocatedCommit();
         lastReciprocatedCommit.setSourceCommitId("source0");
         lastReciprocatedCommit.setSinkCommitId("sink0");
-        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits(lastReciprocatedCommit,
-                Collections.emptyList(), Collections.emptyList());
+        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
+        unreciprocatedCommits.addLastReciprocatedCommit(lastReciprocatedCommit);
         Map<String, Collection<Branch>> branches = new HashMap<>();
         Branch historicBranch = new Branch();
         historicBranch.setId("hb1");
@@ -85,8 +84,8 @@ public class BranchDomainTest {
         ReciprocatedCommit lastReciprocatedCommit = new ReciprocatedCommit();
         lastReciprocatedCommit.setSourceCommitId("source0");
         lastReciprocatedCommit.setSinkCommitId("sink0");
-        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits(lastReciprocatedCommit,
-                Collections.emptyList(), Collections.emptyList());
+        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
+        unreciprocatedCommits.addLastReciprocatedCommit(lastReciprocatedCommit);
         Map<String, Collection<Branch>> branches = new HashMap<>();
         Branch historicBranch = new Branch();
         historicBranch.setId("hb1");
@@ -117,8 +116,9 @@ public class BranchDomainTest {
         ReciprocatedCommit lastReciprocatedCommit = new ReciprocatedCommit();
         lastReciprocatedCommit.setSourceCommitId("source0");
         lastReciprocatedCommit.setSinkCommitId("sink0");
-        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits(lastReciprocatedCommit,
-                Collections.emptyList(), unreciprocatedSinkCommits);
+        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
+        unreciprocatedCommits.addSinkCommits(unreciprocatedSinkCommits);
+        unreciprocatedCommits.addLastReciprocatedCommit(lastReciprocatedCommit);
         Map<String, Collection<Branch>> branches = new HashMap<>();
         Branch historicBranch = new Branch();
         historicBranch.setId("hb1");
@@ -144,8 +144,9 @@ public class BranchDomainTest {
         ReciprocatedCommit lastReciprocatedCommit = new ReciprocatedCommit();
         lastReciprocatedCommit.setSourceCommitId("source0");
         lastReciprocatedCommit.setSinkCommitId("sink0");
-        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits(lastReciprocatedCommit,
-                Collections.emptyList(), unreciprocatedSinkCommits);
+        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
+        unreciprocatedCommits.addSinkCommits(unreciprocatedSinkCommits);
+        unreciprocatedCommits.addLastReciprocatedCommit(lastReciprocatedCommit);
         Map<String, Collection<Branch>> branches = new HashMap<>();
         Branch historicBranch = new Branch();
         historicBranch.setId("hb1");
@@ -174,8 +175,9 @@ public class BranchDomainTest {
         ReciprocatedCommit lastReciprocatedCommit = new ReciprocatedCommit();
         lastReciprocatedCommit.setSourceCommitId("source0");
         lastReciprocatedCommit.setSinkCommitId("sink0");
-        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits(lastReciprocatedCommit,
-                Collections.emptyList(), unreciprocatedSinkCommits);
+        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
+        unreciprocatedCommits.addSinkCommits(unreciprocatedSinkCommits);
+        unreciprocatedCommits.addLastReciprocatedCommit(lastReciprocatedCommit);
         Map<String, Collection<Branch>> branches = new HashMap<>();
         Branch branch = new Branch();
         branch.setId("b1");

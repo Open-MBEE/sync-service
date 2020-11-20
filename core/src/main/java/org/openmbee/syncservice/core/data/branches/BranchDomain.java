@@ -1,6 +1,7 @@
 package org.openmbee.syncservice.core.data.branches;
 
 import org.openmbee.syncservice.core.data.commits.Commit;
+import org.openmbee.syncservice.core.data.commits.ReciprocatedCommit;
 import org.openmbee.syncservice.core.data.commits.UnreciprocatedCommits;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toSet;
+
 @Component
 public class BranchDomain {
     private static final Logger logger = LoggerFactory.getLogger(BranchDomain.class);
@@ -18,7 +21,7 @@ public class BranchDomain {
     public void checkForAndCreateHistoricBranches(UnreciprocatedCommits unreciprocatedCommits,
                                                   Map<String, Collection<Branch>> newBranches, Sink sink) {
 
-        if(unreciprocatedCommits.getLastReciprocatedCommit() == null) {
+        if(unreciprocatedCommits.getLastReciprocatedCommitSet() == null) {
             return;
         }
 
@@ -27,7 +30,7 @@ public class BranchDomain {
                 .collect(Collectors.toMap(Commit::getCommitId, v -> v));
         List<Branch> newHistoricBranches = newBranches.entrySet().stream()
                 .filter(v -> !recentCommits.containsKey(v.getKey()))
-                .filter(v -> !unreciprocatedCommits.getLastReciprocatedCommit().getSourceCommitId().equals(v.getKey()))
+                .filter(v -> unreciprocatedCommits.getLastReciprocatedCommitSet().stream().noneMatch(r -> r.getSourceCommitId().equals(v.getKey())))
                 .flatMap(v -> v.getValue().stream()).collect(Collectors.toList());
 
         if(!newHistoricBranches.isEmpty()) {
@@ -35,38 +38,36 @@ public class BranchDomain {
                 //TODO: implement this once it's applicable
                 throw new RuntimeException("Historic branch creation is not implemented yet.");
             } else {
-                newHistoricBranches.forEach(v -> {
-                    logger.warn("Ignoring missing branch related to past commit: " + v.getName());
-                });
+                newHistoricBranches.forEach(v -> logger.warn("Ignoring missing branch related to past commit: " + v.getName()));
             }
         }
 
         //Check for new branches created at current commit
-        if (newBranches.containsKey(unreciprocatedCommits.getLastReciprocatedCommit().getSourceCommitId())) {
+        //Check if there have been commits in the sink, if so these branches are historic branches now
+        unreciprocatedCommits.getLastReciprocatedCommitSet().stream()
+                .filter(r -> newBranches.containsKey(r.getSourceCommitId()))
+                .forEach(r -> {
+                    Collection<Branch> branches = newBranches.get(r.getSourceCommitId());
+                    branches.forEach(b -> {
+                        Set<Commit> branchSinkCommits = unreciprocatedCommits.getSinkCommits().stream()
+                                .filter(c -> c.getBranchId().equals(b.getId())).collect(toSet());
 
-            Collection<Branch> branches = newBranches.get(unreciprocatedCommits.getLastReciprocatedCommit()
-                    .getSourceCommitId());
-            //Check if there have been commits in the sink, if so these branches are historic branches now
-            if (!unreciprocatedCommits.getSinkCommits().isEmpty()) {
-
-                if (sink.canCreateHistoricBranches()) {
-                    //TODO: implement this once it's applicable
-                    throw new RuntimeException("Historic branch creation is not implemented yet.");
-                } else {
-                    logger.warn("Branch(es) were created in the source since the last sync, " +
-                            "but there have been commits on the sink side that make automatic branch " +
-                            "creation not possible: " +
-                            branches.stream().map(Branch::getName).collect(Collectors.joining(", ")));
-                }
-            } else {
-                //New branches can be created @ current commit
-                branches.forEach(v -> {
-                    Commit latestSinkCommit = sink.getCommitById(unreciprocatedCommits.getLastReciprocatedCommit()
-                            .getSinkCommitId());
-                    createBranchAtHead(sink, latestSinkCommit.getBranchName(), latestSinkCommit.getBranchId(), v);
-                });
-            }
-        }
+                        if(branchSinkCommits.isEmpty()) {//New branches can be created @ current commit
+                            Commit latestSinkCommit = sink.getCommitById(r.getSinkCommitId());
+                            createBranchAtHead(sink, latestSinkCommit.getBranchName(), latestSinkCommit.getBranchId(), b);
+                        } else {
+                            if (sink.canCreateHistoricBranches()) {
+                                //TODO: implement this once it's applicable
+                                throw new RuntimeException("Historic branch creation is not implemented yet.");
+                            } else {
+                                logger.warn("Branch(es) were created in the source since the last sync, " +
+                                        "but there have been commits on the sink side that make automatic branch " +
+                                        "creation not possible: " +
+                                        branches.stream().map(Branch::getName).collect(Collectors.joining(", ")));
+                            }
+                        }
+                    });
+        });
     }
 
     public Map<String, Collection<Branch>> getNewBranches(Source source, Sink sink) {

@@ -1,8 +1,8 @@
 package org.openmbee.syncservice.core.syntax;
 
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.core.syntax.fields.FieldId;
-import org.json.JSONObject;
 
 public interface Parser {
 

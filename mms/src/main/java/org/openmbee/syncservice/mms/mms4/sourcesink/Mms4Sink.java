@@ -1,26 +1,29 @@
 package org.openmbee.syncservice.mms.mms4.sourcesink;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.openmbee.syncservice.core.data.branches.Branch;
 import org.openmbee.syncservice.core.data.branches.BranchCreateRequest;
 import org.openmbee.syncservice.core.data.commits.Commit;
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
 import org.openmbee.syncservice.core.data.commits.ReciprocatedCommit;
-import org.openmbee.syncservice.core.data.branches.Branch;
-import org.openmbee.syncservice.core.data.sourcesink.*;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpointInterface;
+import org.openmbee.syncservice.core.data.sourcesink.Sink;
+import org.openmbee.syncservice.core.data.sourcesink.Source;
 import org.openmbee.syncservice.core.syntax.Syntax;
 import org.openmbee.syncservice.core.utils.JSONUtils;
 import org.openmbee.syncservice.mms.mms4.MmsSyntax;
 import org.openmbee.syncservice.mms.mms4.services.Mms4Service;
 import org.openmbee.syncservice.mms.mms4.util.Mms4DateFormat;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.text.ParseException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Mms4Sink implements ProjectEndpointInterface, Sink {
 
@@ -29,6 +32,7 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
     private ProjectEndpoint endpointConfig;
     private Mms4Service mms4Service;
     private Mms4DateFormat mms4DateFormat;
+    private DateTimeFormatter mms4DateTimeFormatter;
     private JSONUtils jsonUtils;
 
     @Autowired
@@ -39,6 +43,7 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
     @Autowired
     public void setMms4DateFormat(Mms4DateFormat mms4DateFormat) {
         this.mms4DateFormat = mms4DateFormat;
+        mms4DateTimeFormatter = DateTimeFormatter.ofPattern(this.mms4DateFormat.toPattern());
     }
 
     @Autowired
@@ -193,39 +198,34 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
         return commit;
     }
 
-
-
-    public ReciprocatedCommit getLatestReciprocatedCommit() {
-        //TODO should add new endpoint in MMS to make this less clunky
+    public Map<Branch, ReciprocatedCommit> getLatestReciprocatedCommitMapByBranch() {
         Collection<Branch> branches = getBranches();
-        JSONObject latestCommit = null;
-        Date latestCommitDate = null;
+        Map<Branch, ReciprocatedCommit> reciprocatedCommitMapByBranch = new HashMap<>();
+        branches.forEach(b -> {
+            ReciprocatedCommit r = getLatestReciprocatedCommit(b);
+            if(r != null) {
+                reciprocatedCommitMapByBranch.put(b, r);
+            }
+        });
 
-        for (Branch branch : branches) {
-            JSONObject commit = mms4Service.getLatestReciprocatedCommit(getEndpoint(), branch);
-            if(commit == null ||  !commit.has("twc-revisionId")) {
-                continue;
-            }
-            Date commitDate = parseDate(commit.getString("_created"));
-            if(commitDate == null) {
-                continue;
-            }
-            if(latestCommitDate == null) {
-                latestCommit = commit;
-                latestCommitDate = commitDate;
-            } else if(latestCommitDate.before(commitDate)) {
-                latestCommit = commit;
-                latestCommitDate = commitDate;
-            }
+        return reciprocatedCommitMapByBranch;
+    }
+
+    protected ReciprocatedCommit getLatestReciprocatedCommit(Branch branch) {
+        //TODO should add new endpoint in MMS to make this less clunky
+        JSONObject commit = mms4Service.getLatestReciprocatedCommit(getEndpoint(), branch);
+        if(commit == null ||  !commit.has("twc-revisionId")) {
+            return null;
         }
-
-        if(latestCommit == null) {
+        ZonedDateTime commitDate = parseDate(commit.getString("_created"));
+        if(commitDate == null) {
             return null;
         }
 
         ReciprocatedCommit reciprocatedCommit = new ReciprocatedCommit();
-        reciprocatedCommit.setSourceCommitId(latestCommit.getString("twc-revisionId"));
-        reciprocatedCommit.setSinkCommitId(latestCommit.getString("id"));
+        reciprocatedCommit.setSourceCommitId(commit.getString("twc-revisionId"));
+        reciprocatedCommit.setSinkCommitId(commit.getString("id"));
+        reciprocatedCommit.setCommitDate(commitDate);
         return reciprocatedCommit;
     }
 
@@ -324,10 +324,10 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
         return project.getString("schema");
     }
 
-    private Date parseDate(String date) {
+    private ZonedDateTime parseDate(String date) {
         try {
-            return mms4DateFormat.parse(date);
-        } catch (ParseException e) {
+            return ZonedDateTime.parse(date, mms4DateTimeFormatter);
+        } catch (DateTimeParseException e) {
             logger.error("Could not parse date in MMS 4: " + date, e);
             return null;
         }

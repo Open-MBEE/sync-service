@@ -1,23 +1,25 @@
 package org.openmbee.syncservice.twc.service;
 
-import org.openmbee.syncservice.core.utils.JSONUtils;
-import org.openmbee.syncservice.core.utils.RestInterface;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.twc.TeamworkCloudEndpoints;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.utils.JSONUtils;
+import org.openmbee.syncservice.core.utils.RestInterface;
+import org.openmbee.syncservice.twc.TeamworkCloudEndpoints;
 import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static reactor.core.publisher.Mono.when;
 
 public class TeamworkServiceTest {
 

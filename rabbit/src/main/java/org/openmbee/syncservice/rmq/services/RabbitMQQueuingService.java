@@ -3,10 +3,11 @@ package org.openmbee.syncservice.rmq.services;
 import org.openmbee.syncservice.core.constants.SyncServiceConstants;
 import org.openmbee.syncservice.core.queue.dto.QueueDetailsResponseTO;
 import org.openmbee.syncservice.core.queue.dto.QueueDetailsTO;
+import org.openmbee.syncservice.core.queue.service.QueuingService;
 import org.openmbee.syncservice.core.utils.SyncServiceUtil;
 import org.openmbee.syncservice.core.utils.WebClientUtils;
-import org.openmbee.syncservice.core.queue.service.QueuingService;
 import org.openmbee.syncservice.rmq.RabbitMQConfig;
+import org.openmbee.syncservice.rmq.RabbitMQConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -15,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.openmbee.syncservice.rmq.RabbitMQConstants;
 
 import java.net.URI;
 

@@ -3,7 +3,6 @@ package org.openmbee.syncservice.mms.mms4.sourcesink;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -18,9 +17,12 @@ import org.openmbee.syncservice.core.utils.JSONUtils;
 import org.openmbee.syncservice.mms.mms4.services.Mms4Service;
 import org.openmbee.syncservice.mms.mms4.util.Mms4DateFormat;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,6 +44,8 @@ public class Mms4SinkTest {
     @Mock
     private Source source;
 
+    private DateTimeFormatter formatter;
+
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -50,6 +54,8 @@ public class Mms4SinkTest {
         mms4Sink.setMms4Service(mms4Service);
         mms4Sink.setMms4DateFormat(mms4DateFormat);
         mms4Sink.setJsonUtils(jsonUtils);
+
+        formatter = DateTimeFormatter.ofPattern(mms4DateFormat.toPattern());
     }
 
     @Test
@@ -330,24 +336,109 @@ public class Mms4SinkTest {
     }
 
     @Test
+    public void getLatestReciprocatedCommitMapByBranch_Normal() {
+        Branch branch1 = new Branch();
+        branch1.setName("branch1");
+        branch1.setId("b1id");
+        String t1 = "2020-01-01T01:01:01.000-0600";
+        ZonedDateTime d1 = ZonedDateTime.parse(t1, formatter);
+        Branch branch2 = new Branch();
+        branch2.setName("branch2");
+        branch2.setId("b2id");
+        String t2 = "2020-01-01T01:01:01.001-0600";
+        ZonedDateTime d2 = ZonedDateTime.parse(t2, formatter);
+        doReturn(List.of(branch1, branch2)).when(mms4Sink).getBranches();
+
+
+        JSONObject commit1 = new JSONObject("{'twc-revisionId':'123','id':'commitId1','_created':'" + t1 + "'}");
+        when(mms4Service.getLatestReciprocatedCommit(endpoint, branch1)).thenReturn(commit1);
+        ReciprocatedCommit rc1 = new ReciprocatedCommit();
+        rc1.setSourceCommitId(commit1.getString("twc-revisionId"));
+        rc1.setSinkCommitId(commit1.getString("id"));
+        rc1.setCommitDate(d1);
+        doReturn(rc1).when(mms4Sink).getLatestReciprocatedCommit(branch1);
+        JSONObject commit2 = new JSONObject("{'twc-revisionId':'124','id':'commitId2','_created':'" + t2 + "'}");
+        when(mms4Service.getLatestReciprocatedCommit(endpoint, branch2)).thenReturn(commit2);
+        ReciprocatedCommit rc2 = new ReciprocatedCommit();
+        rc2.setSourceCommitId(commit2.getString("twc-revisionId"));
+        rc2.setSinkCommitId(commit2.getString("id"));
+        rc2.setCommitDate(d2);
+        doReturn(rc2).when(mms4Sink).getLatestReciprocatedCommit(branch2);
+
+        Map<Branch, ReciprocatedCommit> reciprocatedCommitByBranchMap = mms4Sink.getLatestReciprocatedCommitMapByBranch();
+
+        assertNotNull(reciprocatedCommitByBranchMap);
+        assertFalse(reciprocatedCommitByBranchMap.isEmpty());
+        assertTrue(reciprocatedCommitByBranchMap.containsKey(branch2));
+        assertTrue(reciprocatedCommitByBranchMap.containsValue(rc2));
+    }
+
+    @Test
+    public void getLatestReciprocatedCommitMapByBranch_Fail1() {
+        Branch branch1 = new Branch();
+        branch1.setName("branch1");
+        branch1.setId("b1id");
+        String t1 = "2020-01-01T01:01:01.000-0600";
+        ZonedDateTime d1 = ZonedDateTime.parse(t1, formatter);
+        Branch branch2 = new Branch();
+        branch2.setName("branch2");
+        branch2.setId("b2id");
+        String t2 = "2020-01-01T01:01:01.001-0600";
+        ZonedDateTime d2 = ZonedDateTime.parse(t2, formatter);
+        doReturn(List.of(branch1, branch2)).when(mms4Sink).getBranches();
+
+
+        JSONObject commit1 = new JSONObject("{'twc-revisionId':'123','id':'commitId1','_created':'" + t1 + "'}");
+        when(mms4Service.getLatestReciprocatedCommit(endpoint, branch1)).thenReturn(commit1);
+        ReciprocatedCommit rc1 = new ReciprocatedCommit();
+        rc1.setSourceCommitId(commit1.getString("twc-revisionId"));
+        rc1.setSinkCommitId(commit1.getString("id"));
+        rc1.setCommitDate(d1);
+        doReturn(rc1).when(mms4Sink).getLatestReciprocatedCommit(branch1);
+        ReciprocatedCommit rc2 = new ReciprocatedCommit();
+        doReturn(null).when(mms4Sink).getLatestReciprocatedCommit(branch2);
+
+        Map<Branch, ReciprocatedCommit> reciprocatedCommitByBranchMap = mms4Sink.getLatestReciprocatedCommitMapByBranch();
+
+        assertNotNull(reciprocatedCommitByBranchMap);
+        assertFalse(reciprocatedCommitByBranchMap.isEmpty());
+        assertFalse(reciprocatedCommitByBranchMap.containsKey(branch2));
+        assertFalse(reciprocatedCommitByBranchMap.containsValue(rc2));
+    }
+
+    @Test
+    public void getLatestReciprocatedCommitMapByBranch_Fail2() {
+        doReturn(List.of()).when(mms4Sink).getBranches();
+
+        Map<Branch, ReciprocatedCommit> reciprocatedCommitByBranchMap = mms4Sink.getLatestReciprocatedCommitMapByBranch();
+
+        assertNotNull(reciprocatedCommitByBranchMap);
+        assertTrue(reciprocatedCommitByBranchMap.isEmpty());
+    }
+
+    @Test
     public void getLatestReciprocatedCommit_Normal() {
         Branch branch1 = new Branch();
         branch1.setName("branch1");
         branch1.setId("b1id");
+        String t1 = "2020-01-01T01:01:01.000-0600";
+        ZonedDateTime d1 = ZonedDateTime.parse(t1, formatter);
         Branch branch2 = new Branch();
         branch2.setName("branch2");
         branch2.setId("b2id");
-        doReturn(List.of(branch1, branch2)).when(mms4Sink).getBranches();
+        String t2 = "2020-01-01T01:01:01.001-0600";
+        ZonedDateTime d2 = ZonedDateTime.parse(t2, formatter);
 
-        JSONObject commit1 = new JSONObject("{'twc-revisionId':'123','id':'commitId1','_created':'2020-01-01T01:01:01.000-0600'}");
+        JSONObject commit1 = new JSONObject("{'twc-revisionId':'123','id':'commitId1','_created':'" + t1 + "'}");
         when(mms4Service.getLatestReciprocatedCommit(endpoint, branch1)).thenReturn(commit1);
-        JSONObject commit2 = new JSONObject("{'twc-revisionId':'124','id':'commitId2','_created':'2020-01-01T01:01:01.001-0600'}");
+        JSONObject commit2 = new JSONObject("{'twc-revisionId':'124','id':'commitId2','_created':'" + t2 + "'}");
         when(mms4Service.getLatestReciprocatedCommit(endpoint, branch2)).thenReturn(commit2);
 
-        ReciprocatedCommit rc = mms4Sink.getLatestReciprocatedCommit();
+        ReciprocatedCommit rc = mms4Sink.getLatestReciprocatedCommit(branch2);
         assertNotNull(rc);
         assertEquals("124", rc.getSourceCommitId());
         assertEquals("commitId2", rc.getSinkCommitId());
+        assertTrue(d2.isEqual(rc.getCommitDate().toInstant().atZone(d2.getZone())));
     }
 
     @Test
@@ -358,12 +449,11 @@ public class Mms4SinkTest {
         Branch branch2 = new Branch();
         branch2.setName("branch2");
         branch2.setId("b2id");
-        doReturn(List.of(branch1, branch2)).when(mms4Sink).getBranches();
 
         JSONObject commit = new JSONObject("{'id':'commitId'}");
         when(mms4Service.getLatestReciprocatedCommit(endpoint, branch1)).thenReturn(commit);
 
-        ReciprocatedCommit rc = mms4Sink.getLatestReciprocatedCommit();
+        ReciprocatedCommit rc = mms4Sink.getLatestReciprocatedCommit(branch2);
         assertNull(rc);
     }
 
@@ -375,11 +465,10 @@ public class Mms4SinkTest {
         Branch branch2 = new Branch();
         branch2.setName("branch2");
         branch2.setId("b2id");
-        doReturn(List.of(branch1, branch2)).when(mms4Sink).getBranches();
 
         when(mms4Service.getLatestReciprocatedCommit(endpoint, branch1)).thenReturn(null);
 
-        ReciprocatedCommit rc = mms4Sink.getLatestReciprocatedCommit();
+        ReciprocatedCommit rc = mms4Sink.getLatestReciprocatedCommit(branch1);
         assertNull(rc);
     }
 
