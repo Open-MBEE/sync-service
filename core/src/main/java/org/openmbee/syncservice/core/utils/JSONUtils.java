@@ -72,4 +72,37 @@ public class JSONUtils {
         }
         return out;
     }
+
+    public boolean getBoolean(JSONObject obj, String key) {
+        if(obj == null || ! obj.has(key)){
+            return false;
+        }
+        try {
+            return obj.getBoolean(key);
+        } catch(Exception ex) {
+            return false;
+        }
+    }
+
+    public String getString(JSONObject obj, String key) {
+        if(obj == null || ! obj.has(key)){
+            return null;
+        }
+        try {
+            return obj.getString(key);
+        } catch(Exception ex) {
+            return null;
+        }
+    }
+
+    public Integer getInt(JSONObject obj, String key) {
+        if(obj == null || ! obj.has(key)){
+            return null;
+        }
+        try {
+            return obj.getInt(key);
+        } catch(Exception ex) {
+            return null;
+        }
+    }
 }

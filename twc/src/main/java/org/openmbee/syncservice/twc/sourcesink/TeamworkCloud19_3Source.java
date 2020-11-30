@@ -9,15 +9,21 @@ import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
 import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpointInterface;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
+import org.openmbee.syncservice.core.syntax.Fields;
+import org.openmbee.syncservice.core.syntax.Parser;
 import org.openmbee.syncservice.core.syntax.Syntax;
+import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.core.utils.JSONUtils;
+import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
 import org.openmbee.syncservice.twc.filter.ElementFilter;
 import org.openmbee.syncservice.twc.filter.OnlyMainModelElementFilter;
 import org.openmbee.syncservice.twc.service.TeamworkService;
 import org.openmbee.syncservice.twc.syntax.TwcSyntax;
+import org.openmbee.syncservice.twc.syntax.fields.TwcFields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -33,6 +39,9 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
     private TeamworkService teamworkService;
     private JSONUtils jsonUtils;
 
+    @Value("${twc.enforce_project_associations:true}")
+    private boolean enforceProjectAssociations = true;
+
     @Autowired
     public void setTeamworkService(TeamworkService teamworkService) {
         this.teamworkService = teamworkService;
@@ -43,8 +52,21 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
         this.jsonUtils = jsonUtils;
     }
 
+    public void setEnforceProjectAssociations(boolean enforceProjectAssociations) {
+        this.enforceProjectAssociations = enforceProjectAssociations;
+    }
+
+    public boolean isEnforceProjectAssociations() {
+        return enforceProjectAssociations;
+    }
+
     public TeamworkCloud19_3Source(ProjectEndpoint sourceEndpoint) {
         this.sourceEndpoint = sourceEndpoint;
+    }
+
+    public boolean isValid() {
+        JSONObject projectInfo = teamworkService.getProjectInfo(getEndpoint());
+        return projectInfo != null && projectInfo.has("removed") && !projectInfo.getBoolean("removed");
     }
 
     @Override
@@ -145,16 +167,7 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
 
         if(commit.getParentCommit() == null ||  "-1".equals(commit.getParentCommit())) {
             //Root revision, treat everything as an addition
-            if(!revision.has("rootObjectIDs")) {
-                logger.error("Could not get root revision for project " + sourceEndpoint.getProject());
-                return null;
-            }
-            JSONArray rootObjects = revision.getJSONArray("rootObjectIDs");
-            List<String> elementIds = new ArrayList<>(rootObjects.length());
-            for (int i = 0; i < rootObjects.length(); i++) {
-                elementIds.add(rootObjects.getString(i));
-            }
-            addedElements = getElementsRecursively(commit.getCommitId(), elementIds);
+            addedElements = getElementsFromRevision(revision, commit.getCommitId(), true);
             updatedElements = new HashMap<>();
             deletedElementIds = new ArrayList<>();
 
@@ -171,11 +184,28 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
 
         CommitChanges commitChanges = new CommitChanges();
         commitChanges.setCommit(commit);
-        commitChanges.setAddedElements(addedElements.values());
-        commitChanges.setUpdatedElements(updatedElements.values());
-        commitChanges.setDeletedElementIds(deletedElementIds);
+        commitChanges.setAddedElements(addedElements != null ? addedElements.values() : Collections.emptyList());
+        commitChanges.setUpdatedElements(updatedElements != null ? updatedElements.values() : Collections.emptyList());
+        commitChanges.setDeletedElementIds(deletedElementIds != null ? deletedElementIds : Collections.emptyList());
         commitChanges.setCommitJson(revision);
         return commitChanges;
+    }
+
+    protected Map<String, JSONObject> getElementsFromRevision(JSONObject revision, String revisionId, boolean recursive) {
+        if(!revision.has("rootObjectIDs")) {
+            logger.error("Could not get root revision for project " + sourceEndpoint.getProject());
+            return null;
+        }
+        JSONArray rootObjects = revision.getJSONArray("rootObjectIDs");
+        List<String> elementIds = new ArrayList<>(rootObjects.length());
+        for (int i = 0; i < rootObjects.length(); i++) {
+            elementIds.add(rootObjects.getString(i));
+        }
+        if(recursive) {
+            return getElementsRecursively(revisionId, elementIds);
+        } else {
+            return getElements(revisionId, elementIds);
+        }
     }
 
     public Map<String, JSONObject> getElements(String revision, Collection<String> elementIds) {
@@ -209,7 +239,9 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
                 .flatMap(Set::stream)
                 .collect(Collectors.toSet());
 
-        nextElements.removeAll(filter.getIgnoredIds());
+        if(filter != null) {
+            nextElements.removeAll(filter.getIgnoredIds());
+        }
         elements.putAll(getElementsRecursively(revision, nextElements, filter));
         return elements;
     }
@@ -241,8 +273,93 @@ public class TeamworkCloud19_3Source implements Source, ProjectEndpointInterface
 
     @Override
     public boolean canSendTo(Sink sink) {
-        //TODO: verify can read this project and the given project sync is a valid target
-        return true;
+        if(!enforceProjectAssociations) {
+            return true;
+        }
+        if(sink instanceof ProjectEndpointInterface) {
+            ProjectEndpoint sinkEndpoint = ((ProjectEndpointInterface)sink).getEndpoint();
+            JSONObject project = teamworkService.getProjectInfo(getEndpoint());
+            String projectId = getSyntax().getParser().getFieldFromElement(TwcFields.PROJECT_ID, project, String.class);
+
+            if(projectId == null || !projectId.equals(sinkEndpoint.getProject())) {
+                logger.error("Project IDs do not match.");
+                return false;
+            }
+
+            Set<String> associatedHosts = getAssociatedHosts();
+            //TODO need something more sophisticated?
+            if(associatedHosts == null || !associatedHosts.contains(sinkEndpoint.getHost())) {
+                logger.error("Embedded hosts do not match.");
+                return false;
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    protected Set<String> getAssociatedHosts() {
+        //Find the main model in the latest revision
+        JSONObject revision = teamworkService.getLatestRevision(sourceEndpoint);
+        Integer revisionIdInt = jsonUtils.getInt(revision, "ID");
+        if(revisionIdInt == null) {
+            logger.error("Could not find revision id in latest revision. " + getEndpoint().toString());
+            return null;
+        }
+        String revisionId = String.valueOf(revisionIdInt);
+        Parser parser = getSyntax().getParser();
+        Fields fields = parser.getFields();
+        Map<String, JSONObject> rootElements = getElementsFromRevision(revision, revisionId, false);
+        Field<SysMLv1X, String> typeField = fields.getField(SysMLv1X.ELEMENT_TYPE, String.class);
+        JSONObject mainModel = rootElements.values().stream().filter(v -> "uml:Model".equals(typeField.get(v))).findAny().orElse(null);
+        if(mainModel == null) {
+            logger.error("Could not find main model. " + getEndpoint().toString());
+            return null;
+        }
+        //Get the applied stereotype instance from the main model and everything under it
+        Field<SysMLv1X, String> asiIdField = fields.getField(SysMLv1X.APPLIED_STEREOTYPE_INSTANCE, String.class);
+        String asiId = asiIdField.get(mainModel);
+        if(asiId == null) {
+            logger.debug("Main model has no Applied Stereotype Instance - ignoring. " + getEndpoint().toString());
+            return null;
+        }
+        Map<String, JSONObject> asiElements = getElementsRecursively(revisionId, List.of(asiId), null);
+
+        //Figure out which defining features are associated with MMS URL values
+        Field<SysMLv1X, String> definingFeatureIdField = fields.getField(SysMLv1X.DEFINING_FEATURE, String.class);
+        Set<String> definingFeatureIds = asiElements.values().stream().map(v -> definingFeatureIdField.get(v))
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<String, JSONObject> definingFeatures = getElements(revisionId, definingFeatureIds, null);
+        Field<SysMLv1X, String> nameField = fields.getField(SysMLv1X.NAME, String.class);
+        Field<TwcFields, String> esiIdField = fields.getField(TwcFields.ESI_ID, String.class);
+        Set<String> mmsUrlDefiningFeatureIds = definingFeatures.values().stream()
+                .filter(v -> "MMS URL".equals(nameField.get(v)))
+                .map(esiIdField::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if(mmsUrlDefiningFeatureIds.isEmpty()) {
+            logger.debug("No MMS URL defining feature found");
+            return null;
+        }
+
+        //Get the MMS URL values
+        Field<SysMLv1X, JSONArray> valuesArrayField = fields.getField(SysMLv1X.VALUE, JSONArray.class);
+        Set<String> valueIds = asiElements.values().parallelStream().filter(v -> {
+                    String definingFeatureId = definingFeatureIdField.get(v);
+                    return definingFeatureId != null && mmsUrlDefiningFeatureIds.contains(definingFeatureId);
+                })
+                .map(v -> jsonUtils.<String>flattenObjectArray(valuesArrayField.get(v), "@id"))
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        Field<SysMLv1X, String> valueField = fields.getField(SysMLv1X.VALUE, String.class);
+        return valueIds.stream().map(asiElements::get)
+                .filter(Objects::nonNull)
+                .filter(v -> "uml:LiteralString".equals(typeField.get(v)))
+                .map(valueField::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
     @Override

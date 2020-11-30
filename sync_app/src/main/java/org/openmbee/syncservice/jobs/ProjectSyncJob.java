@@ -84,5 +84,8 @@ public class ProjectSyncJob implements Job {
                 }
             }
         }
+
+        logger.info("Finished Synchronizing " + reciprocatedFlow.getSource().toString()
+                + " to " + reciprocatedFlow.getSink().toString());
     }
 }

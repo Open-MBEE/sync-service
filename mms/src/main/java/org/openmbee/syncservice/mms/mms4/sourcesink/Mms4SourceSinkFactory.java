@@ -29,8 +29,11 @@ public class Mms4SourceSinkFactory implements ISourceSinkFactory {
 
     @Override
     public Sink getSink(ProjectEndpoint sinkEndpoint) {
-        //TODO check that this is an MMS 4 endpoint
-        return autowire(new Mms4Sink(sinkEndpoint));
+        Mms4Sink sink = autowire(new Mms4Sink(sinkEndpoint));
+        if(sink.isValid()) {
+            return sink;
+        }
+        return null;
     }
 
     @Override
@@ -39,7 +42,7 @@ public class Mms4SourceSinkFactory implements ISourceSinkFactory {
         return null;
     }
 
-    private <T> T autowire(T object) {
+    protected <T> T autowire(T object) {
         applicationContext.getAutowireCapableBeanFactory().autowireBean(object);
         return object;
     }

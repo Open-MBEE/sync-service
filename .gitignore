@@ -10,3 +10,4 @@ libz/
 sonar/
 */build/
 application.properties
+/sync_app/src/main/resources/logback.xml

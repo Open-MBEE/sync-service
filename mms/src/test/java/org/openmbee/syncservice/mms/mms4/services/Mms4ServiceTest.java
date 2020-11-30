@@ -229,4 +229,68 @@ public class Mms4ServiceTest {
         JSONObject obj = mms4Service.getCommit(projectEndpoint, "commitId");
         assertNull(obj);
     }
+
+    @Test
+    public void checkValidSyncTarget_Valid() {
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setHost("otherHost");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setToken("otherToken");
+
+        String url = Mms4Endpoints.CHECK_SYNC_TARGET.buildUrl(host, project);
+        doReturn("true").when(restInterface).post(url, token, MediaType.APPLICATION_JSON,
+                "{\"host\":\"otherHost\",\"collectionId\":\"otherCollection\",\"projectId\":\"otherProject\"}",
+                String.class);
+
+        assertTrue(mms4Service.checkValidSyncTarget(projectEndpoint, otherEndpoint));
+    }
+
+    @Test
+    public void checkValidSyncTarget_Invalid_False() {
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setHost("otherHost");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setToken("otherToken");
+
+        String url = Mms4Endpoints.CHECK_SYNC_TARGET.buildUrl(host, project);
+        doReturn("false").when(restInterface).post(url, token, MediaType.APPLICATION_JSON,
+                "{\"host\":\"otherHost\",\"collectionId\":\"otherCollection\",\"projectId\":\"otherProject\"}",
+                String.class);
+
+        assertFalse(mms4Service.checkValidSyncTarget(projectEndpoint, otherEndpoint));
+    }
+
+    @Test
+    public void checkValidSyncTarget_Invalid_Empty() {
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setHost("otherHost");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setToken("otherToken");
+
+        String url = Mms4Endpoints.CHECK_SYNC_TARGET.buildUrl(host, project);
+        doReturn("").when(restInterface).post(url, token, MediaType.APPLICATION_JSON,
+                "{\"host\":\"otherHost\",\"collectionId\":\"otherCollection\",\"projectId\":\"otherProject\"}",
+                String.class);
+
+        assertFalse(mms4Service.checkValidSyncTarget(projectEndpoint, otherEndpoint));
+    }
+
+    @Test
+    public void checkValidSyncTarget_Invalid_NotBoolean() {
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setHost("otherHost");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setToken("otherToken");
+
+        String url = Mms4Endpoints.CHECK_SYNC_TARGET.buildUrl(host, project);
+        doReturn("notabool").when(restInterface).post(url, token, MediaType.APPLICATION_JSON,
+                "{\"host\":\"otherHost\",\"collectionId\":\"otherCollection\",\"projectId\":\"otherProject\"}",
+                String.class);
+
+        assertFalse(mms4Service.checkValidSyncTarget(projectEndpoint, otherEndpoint));
+    }
 }

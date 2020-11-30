@@ -110,7 +110,8 @@ public class TwcFields19_0_3 implements Fields {
                     return TwcFieldBuilder.get(field, "kerml:esiID", valueClass).atData(1);
                 case DEFAULT_WORKING_PACKAGE:
                     return TwcFieldBuilder.get(field, "@id", valueClass).atPath("defaultWorkingPackage").atEsiData();
-
+                case PROJECT_ID:
+                    return TwcFieldBuilder.get(field, "PROJECT_ID", valueClass).atPath("metadata").build();
                 default:
                     logger.error("Unimplemented TWC field: " + field.toString());
                     return null;

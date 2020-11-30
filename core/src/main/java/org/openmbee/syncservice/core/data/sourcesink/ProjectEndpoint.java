@@ -38,4 +38,9 @@ public class ProjectEndpoint {
     public void setToken(String token) {
         this.token = token;
     }
+
+    @Override
+    public String toString() {
+        return String.join("/", getHost(), getCollection(), getProject());
+    }
 }

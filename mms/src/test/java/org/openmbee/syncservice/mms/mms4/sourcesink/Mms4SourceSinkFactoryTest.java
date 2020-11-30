@@ -17,8 +17,7 @@ import org.springframework.context.ApplicationContext;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class Mms4SourceSinkFactoryTest {
 
@@ -50,10 +49,19 @@ public class Mms4SourceSinkFactoryTest {
     }
 
     @Test
-    public void getSinkTest() {
+    public void getSinkTest_Valid() {
+        doReturn(mms4Sink).when(factory).autowire(any());
+        when(mms4Sink.isValid()).thenReturn(true);
         Sink s = factory.getSink(endpoint);
         assertNotNull(s);
-        verify(autowireCapableBeanFactory).autowireBean(any());
+    }
+
+    @Test
+    public void getSinkTest_Invalid() {
+        doReturn(mms4Sink).when(factory).autowire(any());
+        when(mms4Sink.isValid()).thenReturn(false);
+        Sink s = factory.getSink(endpoint);
+        assertNull(s);
     }
 
     @Test

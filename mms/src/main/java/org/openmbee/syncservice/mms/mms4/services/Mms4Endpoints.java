@@ -10,7 +10,8 @@ public enum Mms4Endpoints {
     POST_ELEMENTS("projects/%s/refs/%s/elements"),
     DELETE_ELEMENTS("projects/%s/refs/%s/elements"),
     CREATE_REFS("projects/%s/refs"),
-    UPDATE_TWC_REVISION("projects/%s/commits/%s/twc-revision/%s");
+    UPDATE_TWC_REVISION("projects/%s/commits/%s/twc-revision/%s"),
+    CHECK_SYNC_TARGET("projects/%s/checkValidSyncTarget");
 
     private String path;
 

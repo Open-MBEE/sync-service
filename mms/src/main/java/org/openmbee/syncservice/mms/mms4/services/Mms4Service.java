@@ -1,6 +1,7 @@
 package org.openmbee.syncservice.mms.mms4.services;
 
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openmbee.syncservice.core.data.branches.Branch;
@@ -142,4 +143,21 @@ public class Mms4Service {
         return null;
     }
 
+    public boolean checkValidSyncTarget(ProjectEndpoint endpoint, ProjectEndpoint other) {
+        JSONObject requestObject = new JSONObject();
+        requestObject.put("host", other.getHost());
+        requestObject.put("collectionId", other.getCollection());
+        requestObject.put("projectId", other.getProject());
+        String response = restInterface.post(Mms4Endpoints.CHECK_SYNC_TARGET.buildUrl(endpoint.getHost(),
+                endpoint.getProject()), endpoint.getToken(), MediaType.APPLICATION_JSON, requestObject.toString(),
+                String.class);
+        if(StringUtils.isEmpty(response)) {
+            return false;
+        }
+        try {
+            return Boolean.parseBoolean(response);
+        } catch(Exception ex) {
+            return false;
+        }
+    }
 }

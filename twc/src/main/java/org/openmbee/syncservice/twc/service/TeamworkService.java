@@ -53,6 +53,13 @@ public class TeamworkService {
 		return versionInfo;
 	}
 
+	public JSONObject getProjectInfo(ProjectEndpoint endpoint) {
+		String revisionDiff = restInterface.get(TeamworkCloudEndpoints.GET_PROJECT_INFO.buildUrl(
+				endpoint.getHost(), endpoint.getCollection(), endpoint.getProject()),
+				endpoint.getToken(), String.class);
+		return new JSONObject(revisionDiff);
+	}
+
 	public JSONObject getRevisionDiff(ProjectEndpoint endpoint, String toRevision, String fromRevision) {
 		String revisionDiff = restInterface.get(TeamworkCloudEndpoints.GET_DIFF_REVISIONS.buildUrl(
 				endpoint.getHost(), endpoint.getCollection(), endpoint.getProject(), toRevision, fromRevision),
@@ -110,6 +117,20 @@ public class TeamworkService {
 		String json = restInterface.get(TeamworkCloudEndpoints.GET_PROJECT_REVISION.buildUrl(endpoint.getHost(),
 				endpoint.getCollection(), endpoint.getProject(), revision), endpoint.getToken(),
 				String.class);
+
+		if(json == null || json.isEmpty()) {
+			return null;
+		}
+		JSONArray jsonArray = new JSONArray(json);
+		if(json != null && jsonArray.length() > 0) {
+			return jsonArray.getJSONObject(0);
+		}
+		return null;
+	}
+
+	public JSONObject getLatestRevision(ProjectEndpoint endpoint) {
+		String json = restInterface.get(TeamworkCloudEndpoints.GET_PROJECT_LATEST_REVISION.buildUrl(endpoint.getHost(),
+				endpoint.getProject()), endpoint.getToken(), String.class);
 
 		if(json == null || json.isEmpty()) {
 			return null;

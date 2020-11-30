@@ -27,8 +27,11 @@ public class TeamworkCloudSourceSinkFactory implements ISourceSinkFactory {
 
     @Override
     public Source getSource(ProjectEndpoint sourceEndpoint) {
-        //TODO: Verify this project exists in TWC
-        return autowire(new TeamworkCloud19_3Source(sourceEndpoint));
+        TeamworkCloud19_3Source source = autowire(new TeamworkCloud19_3Source(sourceEndpoint));
+        if(source.isValid()) {
+            return source;
+        }
+        return null;
     }
 
     @Override

@@ -12,6 +12,7 @@ import org.openmbee.syncservice.core.data.commits.Commit;
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
 import org.openmbee.syncservice.core.data.commits.ReciprocatedCommit;
 import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpointInterface;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
 import org.openmbee.syncservice.core.utils.JSONUtils;
 import org.openmbee.syncservice.mms.mms4.services.Mms4Service;
@@ -41,8 +42,9 @@ public class Mms4SinkTest {
     private ProjectEndpoint endpoint;
     private Mms4Sink mms4Sink;
 
+    private interface MockSourceInterface extends Source, ProjectEndpointInterface {}
     @Mock
-    private Source source;
+    private MockSourceInterface source;
 
     private DateTimeFormatter formatter;
 
@@ -674,4 +676,76 @@ public class Mms4SinkTest {
         String schema = mms4Sink.getProjectSchema();
         assertNull(schema);
     }
+
+    @Test
+    public void isValid_Valid() {
+        when(mms4Service.getProject(endpoint)).thenReturn(new JSONObject("{'id':'theid'}"));
+        assertTrue(mms4Sink.isValid());
+    }
+
+    @Test
+    public void isValid_Invalid1() {
+        when(mms4Service.getProject(endpoint)).thenReturn(new JSONObject("{}"));
+        assertFalse(mms4Sink.isValid());
+    }
+
+    @Test
+    public void isValid_Invalid2() {
+        when(mms4Service.getProject(endpoint)).thenReturn(null);
+        assertFalse(mms4Sink.isValid());
+    }
+
+    @Test
+    public void canReceiveFrom_CanReceive_Enforced() {
+        mms4Sink.setEnforceProjectAssociations(true);
+        ProjectEndpoint sourceEndpoint = mock(ProjectEndpoint.class);
+        when(source.getEndpoint()).thenReturn(sourceEndpoint);
+        when(mms4Service.checkValidSyncTarget(endpoint, sourceEndpoint)).thenReturn(true);
+
+        assertTrue(mms4Sink.canReceiveFrom(source));
+
+        verify(source).getEndpoint();
+        verify(mms4Service).checkValidSyncTarget(any(), any());
+    }
+
+    @Test
+    public void canReceiveFrom_CannotReceive_Enforced() {
+        mms4Sink.setEnforceProjectAssociations(true);
+        ProjectEndpoint sourceEndpoint = mock(ProjectEndpoint.class);
+        when(source.getEndpoint()).thenReturn(sourceEndpoint);
+        when(mms4Service.checkValidSyncTarget(endpoint, sourceEndpoint)).thenReturn(false);
+
+        assertFalse(mms4Sink.canReceiveFrom(source));
+
+        verify(source).getEndpoint();
+        verify(mms4Service).checkValidSyncTarget(any(), any());
+    }
+
+    @Test
+    public void canReceiveFrom_Notenforced() {
+        mms4Sink.setEnforceProjectAssociations(false);
+        assertTrue(mms4Sink.canReceiveFrom(source));
+
+        verify(source, times(0)).getEndpoint();
+        verify(mms4Service, times(0)).checkValidSyncTarget(any(), any());
+    }
+
+    @Test
+    public void canReceiveFrom_Enforced_NotAProjectEndpointInterface() {
+        mms4Sink.setEnforceProjectAssociations(true);
+        assertFalse(mms4Sink.canReceiveFrom(mock(Source.class)));
+
+        verify(source, times(0)).getEndpoint();
+        verify(mms4Service, times(0)).checkValidSyncTarget(any(), any());
+    }
+
+    @Test
+    public void canReceiveFrom_NotEnforced_NotAProjectEndpointInterface() {
+        mms4Sink.setEnforceProjectAssociations(false);
+        assertTrue(mms4Sink.canReceiveFrom(mock(Source.class)));
+
+        verify(source, times(0)).getEndpoint();
+        verify(mms4Service, times(0)).checkValidSyncTarget(any(), any());
+    }
+
 }

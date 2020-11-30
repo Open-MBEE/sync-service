@@ -19,6 +19,7 @@ import org.openmbee.syncservice.mms.mms4.util.Mms4DateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +35,9 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
     private Mms4DateFormat mms4DateFormat;
     private DateTimeFormatter mms4DateTimeFormatter;
     private JSONUtils jsonUtils;
+
+    @Value("${mms.enforce_project_associations:true}")
+    private boolean enforceProjectAssociations = true;
 
     @Autowired
     public void setMms4Service(Mms4Service mms4Service) {
@@ -55,23 +59,42 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
         this.endpointConfig = endpointConfig;
     }
 
+    public boolean isEnforceProjectAssociations() {
+        return enforceProjectAssociations;
+    }
+
+    public void setEnforceProjectAssociations(boolean enforceProjectAssociations) {
+        this.enforceProjectAssociations = enforceProjectAssociations;
+    }
+
     @Override
     public ProjectEndpoint getEndpoint() {
         return endpointConfig;
     }
 
+    public boolean isValid() {
+        JSONObject project = mms4Service.getProject(getEndpoint());
+        return  project != null && project.has("id");
+    }
+
+
     @Override
     public boolean canReceiveFrom(Source source) {
-        //TODO: get MMS project and check that it can sync with the TWC project provided
-        return true;
+        if(!enforceProjectAssociations) {
+            return true;
+        }
+
+        if(source instanceof ProjectEndpointInterface) {
+            ProjectEndpoint otherEndpoint = ((ProjectEndpointInterface)source).getEndpoint();
+            return mms4Service.checkValidSyncTarget(getEndpoint(), otherEndpoint);
+        }
+        return false;
     }
 
     @Override
     public Syntax getSyntax() {
         return MmsSyntax.MMS4;
     }
-
-
 
     @Override
     public List<String> commitChanges(Source source, Branch sinkBranch, CommitChanges commitChanges) {
@@ -112,6 +135,9 @@ public class Mms4Sink implements ProjectEndpointInterface, Sink {
             if(rejected.length() > 0) {
                 logger.warn(rejected.length() + " elements were rejected by MMS");
                 //TODO is this ok or should we throw?
+                for (int i = 0; i < rejected.length(); i++) {
+                    logger.debug("Rejected: " + rejected.get(i).toString());
+                }
             }
         }
     }

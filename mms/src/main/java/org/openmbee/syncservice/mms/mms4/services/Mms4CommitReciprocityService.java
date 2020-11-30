@@ -32,15 +32,21 @@ public class Mms4CommitReciprocityService implements CommitReciprocityService {
 
         Map<Branch, ReciprocatedCommit> reciprocatedCommitMapByBranch = sink.getLatestReciprocatedCommitMapByBranch();
 
+        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
         if(reciprocatedCommitMapByBranch == null || reciprocatedCommitMapByBranch.isEmpty()) {
-            throw new RuntimeException("Endpoints have no reciprocated commits");
+            //This is ok if this is a new project
+            if(sinkCommits.isEmpty() || (sinkCommits.size() == 1 && "cameo".equals(sink.getProjectSchema())) ) {
+                unreciprocatedCommits.addSourceCommits(sourceCommits);
+                unreciprocatedCommits.addSinkCommits(sinkCommits);
+            } else {
+                throw new RuntimeException("Endpoints have no reciprocated commits");
+            }
         }
 
         // UnreciprocatedCommits has SortedSet variables inside to prevent duplicates and allow ordering
-        UnreciprocatedCommits unreciprocatedCommits = new UnreciprocatedCommits();
         reciprocatedCommitMapByBranch.forEach((b, r) -> {
             // only use commits belonging to the current branch, should prevent re-used commits
-            List<Commit> branchSourceCommits = trimByBranchId(sourceCommits, b.getId());
+            List<Commit> branchSourceCommits = trimByBranchName(sourceCommits, getSourceBranchName(b.getName()));
             List<Commit> branchSinkCommits = trimByBranchId(sinkCommits, b.getId());
             if(r != null) {
                 unreciprocatedCommits.addSourceCommits(trimAtCommit(branchSourceCommits, r.getSourceCommitId()));
@@ -59,6 +65,14 @@ public class Mms4CommitReciprocityService implements CommitReciprocityService {
         return unreciprocatedCommits;
     }
 
+    private String getSourceBranchName(String sinkBranchName) {
+        //TODO: make this generic - this is just a hack to get it to work for now
+        if("master".equals(sinkBranchName)) {
+            return "trunk";
+        }
+        return sinkBranchName;
+    }
+
     @Override
     public void registerReciprocatedCommit(String sourceCommitId, String sinkCommitId) {
         sink.registerReciprocatedCommit(sourceCommitId, sinkCommitId);
@@ -69,8 +83,16 @@ public class Mms4CommitReciprocityService implements CommitReciprocityService {
         for(Commit c : list) {
             if(c.getBranchId().equals(branchId)) {
                 trimmed.add(c);
-            } else if(c.getBranchId().equals("trunk") && branchId.equals("master")) {
-                trimmed.add(c); // only exception for twc/mms naming convention
+            }
+        }
+        return trimmed;
+    }
+
+    private List<Commit> trimByBranchName(List<Commit> list, String branchName) {
+        List<Commit> trimmed = new ArrayList<>();
+        for(Commit c : list) {
+            if(c.getBranchName().equals(branchName)) {
+                trimmed.add(c);
             }
         }
         return trimmed;
@@ -82,6 +104,6 @@ public class Mms4CommitReciprocityService implements CommitReciprocityService {
                 return list.subList(0, i);
             }
         }
-        throw new RuntimeException("Reciprocated commit id not found in commit history");
+        return new ArrayList<>(list);
     }
 }
