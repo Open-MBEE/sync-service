@@ -1,29 +1,62 @@
 package org.openmbee.syncservice.core.data.commits;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class UnreciprocatedCommits {
-    private List<Commit> sourceCommits;
-    private List<Commit> sinkCommits;
+    private SortedSet<ReciprocatedCommit> lastReciprocatedCommitSet;
+    private SortedSet<Commit> sourceCommits;
+    private SortedSet<Commit> sinkCommits;
 
-    public UnreciprocatedCommits(List<Commit> sourceCommits, List<Commit> sinkCommits) {
-        this.sourceCommits = sourceCommits;
-        this.sinkCommits = sinkCommits;
+    public UnreciprocatedCommits() {
+        this.lastReciprocatedCommitSet = new TreeSet<>();
+        this.sourceCommits = new TreeSet<>();
+        this.sinkCommits = new TreeSet<>();
     }
 
-    public List<Commit> getSourceCommits() {
+    @Override
+    public final boolean equals(Object o) {
+        if(this == o) {
+            return true;
+        } else if(!(o instanceof UnreciprocatedCommits)) {
+            return false;
+        }
+        UnreciprocatedCommits unreciprocatedCommits = (UnreciprocatedCommits) o;
+        return this.getLastReciprocatedCommitSet().equals(unreciprocatedCommits.getLastReciprocatedCommitSet());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this.getLastReciprocatedCommitSet() != null ? this.getLastReciprocatedCommitSet().hashCode() : -1;
+    }
+
+    public SortedSet<ReciprocatedCommit> getLastReciprocatedCommitSet() {
+        return lastReciprocatedCommitSet;
+    }
+
+    /**
+     * Assumes the developer has checked to ensure this is the last reciprocated commit of a particular branch.
+     *
+     * @param lastReciprocatedCommit
+     */
+    public void addLastReciprocatedCommit(ReciprocatedCommit lastReciprocatedCommit) {
+        this.lastReciprocatedCommitSet.add(lastReciprocatedCommit);
+    }
+
+    public SortedSet<Commit> getSourceCommits() {
         return sourceCommits;
     }
 
-    public void setSourceCommits(List<Commit> sourceCommits) {
-        this.sourceCommits = sourceCommits;
+    public void addSourceCommits(Collection<Commit> sourceCommits) {
+        this.sourceCommits.addAll(sourceCommits);
     }
 
-    public List<Commit> getSinkCommits() {
+    public SortedSet<Commit> getSinkCommits() {
         return sinkCommits;
     }
 
-    public void setSinkCommits(List<Commit> sinkCommits) {
-        this.sinkCommits = sinkCommits;
+    public void addSinkCommits(Collection<Commit> sinkCommits) {
+        this.sinkCommits.addAll(sinkCommits);
     }
 }

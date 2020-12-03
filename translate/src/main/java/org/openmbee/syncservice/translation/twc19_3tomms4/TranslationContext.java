@@ -1,5 +1,6 @@
 package org.openmbee.syncservice.translation.twc19_3tomms4;
 
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.data.commits.Commit;
 import org.openmbee.syncservice.core.data.commits.CommitChanges;
 import org.openmbee.syncservice.core.syntax.Parser;
@@ -7,7 +8,6 @@ import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.core.translation.Translator;
 import org.openmbee.syncservice.twc.sourcesink.TeamworkCloudSource;
 import org.openmbee.syncservice.twc.syntax.fields.TwcFields;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

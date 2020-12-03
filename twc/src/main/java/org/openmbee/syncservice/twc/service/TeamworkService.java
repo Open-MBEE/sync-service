@@ -1,14 +1,12 @@
 package org.openmbee.syncservice.twc.service;
 
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.openmbee.syncservice.core.utils.RestInterface;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.twc.TeamworkCloudEndpoints;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.utils.JSONUtils;
+import org.openmbee.syncservice.core.utils.RestInterface;
+import org.openmbee.syncservice.twc.TeamworkCloudEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import org.openmbee.syncservice.core.utils.JSONUtils;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * TeamworkService class is used to make GET requests to Teamwork Cloud REST APIs   
@@ -50,6 +51,13 @@ public class TeamworkService {
 		String versionInfo = restInterface.get(TeamworkCloudEndpoints.GET_VERSION_INFO.buildUrl(host),
 				token, String.class);
 		return versionInfo;
+	}
+
+	public JSONObject getProjectInfo(ProjectEndpoint endpoint) {
+		String revisionDiff = restInterface.get(TeamworkCloudEndpoints.GET_PROJECT_INFO.buildUrl(
+				endpoint.getHost(), endpoint.getCollection(), endpoint.getProject()),
+				endpoint.getToken(), String.class);
+		return new JSONObject(revisionDiff);
 	}
 
 	public JSONObject getRevisionDiff(ProjectEndpoint endpoint, String toRevision, String fromRevision) {
@@ -86,6 +94,19 @@ public class TeamworkService {
 		return new JSONArray(json);
 	}
 
+	public JSONArray getBranches(ProjectEndpoint endpoint) {
+		String json =  restInterface.get(TeamworkCloudEndpoints.GET_BRANCHES.buildUrl(endpoint.getHost(),
+				endpoint.getCollection(), endpoint.getProject(), "true"), endpoint.getToken(), String.class);
+		if(json == null || json.isEmpty()) {
+			return null;
+		}
+		JSONObject returnedObject = new JSONObject(json);
+		if(returnedObject.has("ldp:contains") && ! returnedObject.isNull("ldp:contains")) {
+			return returnedObject.getJSONArray("ldp:contains");
+		}
+		return null;
+	}
+
 	public JSONArray getBranchById(ProjectEndpoint endpoint, String branchId) {
 		String json =  restInterface.get(TeamworkCloudEndpoints.GET_BRANCH.buildUrl(endpoint.getHost(),
 				endpoint.getCollection(), endpoint.getProject(), branchId), endpoint.getToken(), String.class);
@@ -107,24 +128,17 @@ public class TeamworkService {
 		return null;
 	}
 
+	public JSONObject getLatestRevision(ProjectEndpoint endpoint) {
+		String json = restInterface.get(TeamworkCloudEndpoints.GET_PROJECT_LATEST_REVISION.buildUrl(endpoint.getHost(),
+				endpoint.getProject()), endpoint.getToken(), String.class);
 
-//	/**
-//	 * This method checks whether an MMS Host is associated with a TWC Host name
-//	 * for syncing the data
-//	 * @param twcUrl
-//	 * @param mmsUrl
-//	 * @return
-//	 */
-//	@Override
-//	public boolean isTwcMMSSyncEnabled(String twcUrl, String mmsUrl){
-//		boolean isSyncEnabled = false;
-//		TWCInstance twcInstance = twcConfig.getTwcInstance(twcUrl);
-//		if(twcInstance == null){ return false; }
-//
-//		if(twcInstance.getHost().equals(twcUrl.toLowerCase()) &&
-//				twcInstance.getTwcAssociatedMmsHostList().contains(mmsUrl.toLowerCase()) )
-//			isSyncEnabled = true;
-//
-//		return isSyncEnabled;
-//	}
+		if(json == null || json.isEmpty()) {
+			return null;
+		}
+		JSONArray jsonArray = new JSONArray(json);
+		if(json != null && jsonArray.length() > 0) {
+			return jsonArray.getJSONObject(0);
+		}
+		return null;
+	}
 }

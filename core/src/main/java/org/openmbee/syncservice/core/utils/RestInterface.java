@@ -31,15 +31,17 @@ public class RestInterface {
                 .contentType(mediaType)
                 .body(BodyInserters.fromValue(body)).retrieve();
         ResponseEntity<T> apiResponse = response.toEntity(responseType).block();
-        if(HttpStatus.OK == apiResponse.getStatusCode()) {
+        if(apiResponse != null && HttpStatus.OK == apiResponse.getStatusCode()) {
             try {
                 return apiResponse.getBody();
             } catch(Exception ex) {
                 logger.error("Post call failed with exception", ex);
                 return null;
             }
-        } else {
+        } else if(apiResponse != null) {
             logger.error("Post call failed with code " + apiResponse.getStatusCode());
+        } else {
+            logger.error("Post call returned null");
         }
         return null;
     }
@@ -48,15 +50,17 @@ public class RestInterface {
         ResponseEntity<T> apiResponse = webClientBuilder.build().get().uri(uri)
                 .header(SyncServiceConstants.AUTHORIZATION, token)
                 .retrieve().toEntity(responseType).block();
-        if(HttpStatus.OK == apiResponse.getStatusCode()) {
+        if(apiResponse != null && HttpStatus.OK == apiResponse.getStatusCode()) {
             try {
                 return apiResponse.getBody();
             } catch(Exception ex) {
                 logger.error("Get call failed with exception", ex);
                 return null;
             }
-        } else {
+        } else if(apiResponse != null) {
             logger.error("Get call failed with code " + apiResponse.getStatusCode());
+        } else {
+            logger.error("Get call returned null");
         }
         return null;
     }
@@ -69,16 +73,38 @@ public class RestInterface {
                 .contentType(mediaType)
                 .body(BodyInserters.fromValue(body)).retrieve();
         ResponseEntity<T> apiResponse = response.toEntity(responseType).block();
-        if(HttpStatus.OK == apiResponse.getStatusCode()) {
+        if(apiResponse != null && HttpStatus.OK == apiResponse.getStatusCode()) {
             try {
                 return apiResponse.getBody();
             } catch(Exception ex) {
                 logger.error("Delete call failed with exception", ex);
                 return null;
             }
-        } else {
+        } else if(apiResponse != null){
             logger.error("Delete call failed with code " + apiResponse.getStatusCode());
+        } else {
+            logger.error("Delete call returned null");
         }
         return null;
     }
+
+    public <T> T put(String uri, String token, Class<T> responseType) {
+        ResponseEntity<T> apiResponse = webClientBuilder.build().put().uri(uri)
+                .header(SyncServiceConstants.AUTHORIZATION, token)
+                .retrieve().toEntity(responseType).block();
+        if(apiResponse != null && HttpStatus.OK == apiResponse.getStatusCode()) {
+            try {
+                return apiResponse.getBody();
+            } catch(Exception ex) {
+                logger.error("Put call failed with exception", ex);
+                return null;
+            }
+        } else if(apiResponse != null) {
+            logger.error("Get call failed with code " + apiResponse.getStatusCode());
+        } else {
+            logger.error("Put call returned null");
+        }
+        return null;
+    }
+
 }

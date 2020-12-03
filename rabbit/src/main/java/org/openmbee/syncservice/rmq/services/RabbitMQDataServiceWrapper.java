@@ -1,9 +1,9 @@
 package org.openmbee.syncservice.rmq.services;
 
-import org.openmbee.syncservice.core.constants.SyncServiceConstants;
-import org.openmbee.syncservice.core.exceptions.ProjectSyncOverlapException;
-import org.openmbee.syncservice.core.data.services.DataService;
 import com.rabbitmq.client.Channel;
+import org.openmbee.syncservice.core.constants.SyncServiceConstants;
+import org.openmbee.syncservice.core.data.services.DataService;
+import org.openmbee.syncservice.core.exceptions.ProjectSyncOverlapException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_START_LOG;
 import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_END_LOG;
+import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_START_LOG;
 
 @Service
 public class RabbitMQDataServiceWrapper {

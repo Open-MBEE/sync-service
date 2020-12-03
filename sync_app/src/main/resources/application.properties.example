@@ -17,6 +17,7 @@ password=admin
 Content-Type=application/json
 Authorization="Basic " + encoding
 
-twc.max_element_batch_size=5000
 spring.webclient.bufferbytes=16777216
-
+twc.max_element_batch_size=5000
+twc.enforce_project_associations=true
+mms.enforce_project_associations=true

@@ -1,12 +1,12 @@
 package org.openmbee.syncservice.translation.twc19_3tomms4;
 
+import org.json.JSONArray;
 import org.openmbee.syncservice.core.syntax.fields.CommonFields;
-import org.openmbee.syncservice.core.translation.elements.ElementBuilder;
 import org.openmbee.syncservice.core.translation.elements.Detail;
+import org.openmbee.syncservice.core.translation.elements.ElementBuilder;
 import org.openmbee.syncservice.mms.mms4.MmsFields;
 import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
 import org.openmbee.syncservice.twc.syntax.fields.TwcFields;
-import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

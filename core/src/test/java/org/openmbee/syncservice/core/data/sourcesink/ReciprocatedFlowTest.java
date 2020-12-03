@@ -1,12 +1,12 @@
 package org.openmbee.syncservice.core.data.sourcesink;
 
-import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.verify;
 
 public class ReciprocatedFlowTest {

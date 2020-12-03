@@ -33,19 +33,6 @@ public class JSONUtils {
         return strList;
     }
 
-    public <T> T getObjectFromArrayOfJSONObjects(JSONArray array, String key) {
-        if(array == null) {
-            return null;
-        }
-        for (int j = 0; j < array.length(); j++) {
-            JSONObject arrayObj = array.getJSONObject(j);
-            if(arrayObj.has(key)) {
-                return (T) arrayObj.get(key);
-            }
-        }
-        return null;
-    }
-
     public String getStringFromArrayOfJSONObjects(JSONArray array, String key) {
         if(array == null) {
             return null;
@@ -84,5 +71,38 @@ public class JSONUtils {
             }
         }
         return out;
+    }
+
+    public boolean getBoolean(JSONObject obj, String key) {
+        if(obj == null || ! obj.has(key)){
+            return false;
+        }
+        try {
+            return obj.getBoolean(key);
+        } catch(Exception ex) {
+            return false;
+        }
+    }
+
+    public String getString(JSONObject obj, String key) {
+        if(obj == null || ! obj.has(key)){
+            return null;
+        }
+        try {
+            return obj.getString(key);
+        } catch(Exception ex) {
+            return null;
+        }
+    }
+
+    public Integer getInt(JSONObject obj, String key) {
+        if(obj == null || ! obj.has(key)){
+            return null;
+        }
+        try {
+            return obj.getInt(key);
+        } catch(Exception ex) {
+            return null;
+        }
     }
 }

@@ -1,7 +1,7 @@
 package org.openmbee.syncservice.twc.sourcesink;
 
-import org.openmbee.syncservice.twc.filter.ElementFilter;
 import org.json.JSONObject;
+import org.openmbee.syncservice.twc.filter.ElementFilter;
 
 import java.util.Collection;
 import java.util.Map;

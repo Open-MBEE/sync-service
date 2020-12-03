@@ -1,13 +1,13 @@
 package org.openmbee.syncservice.twc.syntax.fields;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.core.syntax.fields.FieldBuilder;
 import org.openmbee.syncservice.core.syntax.path.IndexedLeafSegment;
 import org.openmbee.syncservice.core.syntax.path.IndexedSegment;
 import org.openmbee.syncservice.core.syntax.path.KeyedLeafSegment;
 import org.openmbee.syncservice.core.syntax.path.KeyedSegment;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class TwcFieldBuilder<F, S, T, V> extends FieldBuilder<F, S, T, V> {
     public static <F,V> TwcFieldBuilder<F, JSONObject,V,V> get(F field, String key, Class<V> valueClass) {

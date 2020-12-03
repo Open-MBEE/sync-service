@@ -1,23 +1,25 @@
 package org.openmbee.syncservice.twc.service;
 
-import org.openmbee.syncservice.core.utils.JSONUtils;
-import org.openmbee.syncservice.core.utils.RestInterface;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.twc.TeamworkCloudEndpoints;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.utils.JSONUtils;
+import org.openmbee.syncservice.core.utils.RestInterface;
+import org.openmbee.syncservice.twc.TeamworkCloudEndpoints;
 import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static reactor.core.publisher.Mono.when;
 
 public class TeamworkServiceTest {
 
@@ -114,6 +116,57 @@ public class TeamworkServiceTest {
         JSONArray array = teamworkService.getProjectRevisions(endpoint);
         assertNotNull(array);
         assertEquals(2, array.length());
+    }
+
+    @Test
+    public void getBranches_Null() {
+        String json = null;
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNull(array);
+    }
+
+    @Test
+    public void getBranches_Empty() {
+        String json = "";
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNull(array);
+    }
+
+    @Test
+    public void getBranches_Missing() {
+        String json = "{}";
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNull(array);
+    }
+
+    @Test
+    public void getBranches_InternalNull() {
+        String json = "{\"ldp:contains\":null}";
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNull(array);
+    }
+
+    @Test
+    public void getBranches_Normal() {
+        String json = "{\"ldp:contains\":[{}]}";
+        String url = TeamworkCloudEndpoints.GET_BRANCHES.buildUrl("host", "collection", "project", "true");
+        doReturn(json).when(restInterface).get(url, "token", String.class);
+
+        JSONArray array = teamworkService.getBranches(endpoint);
+        assertNotNull(array);
+        assertEquals(1, array.length());
     }
 
     @Test

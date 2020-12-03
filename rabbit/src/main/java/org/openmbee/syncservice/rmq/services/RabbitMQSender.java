@@ -1,12 +1,6 @@
 package org.openmbee.syncservice.rmq.services;
 
 
-import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.INFO_LOG;
-import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_END_LOG;
-import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.METHOD_START_LOG;
-
-import java.io.IOException;
-
 import org.openmbee.syncservice.core.queue.service.Sender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +10,10 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+
+import static org.openmbee.syncservice.core.constants.SyncServiceConstants.LoggerStatements.*;
 
 @Service
 public class RabbitMQSender implements Sender {

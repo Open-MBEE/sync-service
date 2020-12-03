@@ -1,11 +1,5 @@
 package org.openmbee.syncservice.twc.sourcesink;
 
-import org.openmbee.syncservice.core.data.common.Branch;
-import org.openmbee.syncservice.core.utils.JSONUtils;
-import org.openmbee.syncservice.core.data.commits.Commit;
-import org.openmbee.syncservice.core.data.commits.CommitChanges;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.twc.service.TeamworkService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -14,13 +8,29 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.openmbee.syncservice.core.data.branches.Branch;
+import org.openmbee.syncservice.core.data.commits.Commit;
+import org.openmbee.syncservice.core.data.commits.CommitChanges;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpointInterface;
+import org.openmbee.syncservice.core.data.sourcesink.Sink;
+import org.openmbee.syncservice.core.syntax.Fields;
+import org.openmbee.syncservice.core.syntax.Parser;
+import org.openmbee.syncservice.core.syntax.Syntax;
+import org.openmbee.syncservice.core.syntax.fields.Field;
+import org.openmbee.syncservice.core.utils.JSONUtils;
+import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
+import org.openmbee.syncservice.twc.service.TeamworkService;
+import org.openmbee.syncservice.twc.syntax.fields.TwcFields;
 
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TeamworkCloud19_3SourceTest {
 
@@ -35,13 +45,48 @@ public class TeamworkCloud19_3SourceTest {
     @InjectMocks
     private TeamworkCloud19_3Source teamworkCloud19_3Source;
 
+    private interface MockSinkInterface extends Sink, ProjectEndpointInterface {}
+    @Mock
+    private MockSinkInterface sink;
+
     @Before
     public void setup() {
         endpoint = new ProjectEndpoint();
-        teamworkCloud19_3Source = new TeamworkCloud19_3Source(endpoint);
+        teamworkCloud19_3Source = spy(new TeamworkCloud19_3Source(endpoint));
         MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void isValidTest_Valid() {
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(new JSONObject("{'removed':'false'}"));
+        assertTrue(teamworkCloud19_3Source.isValid());
+    }
+
+    @Test
+    public void isValidTest_Removed() {
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(new JSONObject("{'removed':'true'}"));
+        assertFalse(teamworkCloud19_3Source.isValid());
+    }
+
+    @Test
+    public void isValidTest_RemovedNotIndicated() {
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(new JSONObject("{}"));
+        assertFalse(teamworkCloud19_3Source.isValid());
+    }
+
+    @Test
+    public void isValidTest_ProjectNotFound() {
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(null);
+        assertFalse(teamworkCloud19_3Source.isValid());
+    }
 
 
+
+    @Test
+    public void getCommitHistoryTestNull() {
+        when(teamworkService.getProjectRevisions(endpoint)).thenReturn(null);
+        List<Commit> commits = teamworkCloud19_3Source.getCommitHistory();
+        assertNull(commits);
     }
 
     @Test
@@ -55,28 +100,28 @@ public class TeamworkCloud19_3SourceTest {
         assertEquals("3",commit.getParentCommit());
         assertEquals("184bdb32-3959-4e23-b14f-346fbd26c0eb",commit.getBranchId());
         assertNull(commit.getBranchName());
-        assertEquals(new Date(1601477216*1000l),commit.getCommitDate());
+        assertEquals("2020-09-30T10:46:56-04:00[America/New_York]",commit.getCommitDate().toString());
         assertEquals("4",commit.getCommitId());
 
         commit = commits.get(1);
         assertEquals("2",commit.getParentCommit());
         assertEquals("5f31ea7b-144f-45b2-8899-0de92d99698a",commit.getBranchId());
         assertNull(commit.getBranchName());
-        assertEquals(new Date(1600259459*1000l),commit.getCommitDate());
+        assertEquals("2020-09-16T08:30:59-04:00[America/New_York]",commit.getCommitDate().toString());
         assertEquals("3",commit.getCommitId());
 
         commit = commits.get(2);
         assertEquals("1",commit.getParentCommit());
         assertEquals("5f31ea7b-144f-45b2-8899-0de92d99698a",commit.getBranchId());
         assertNull(commit.getBranchName());
-        assertEquals(new Date(1600258618*1000l),commit.getCommitDate());
+        assertEquals("2020-09-16T08:16:58-04:00[America/New_York]",commit.getCommitDate().toString());
         assertEquals("2",commit.getCommitId());
 
         commit = commits.get(3);
         assertEquals("-1",commit.getParentCommit());
         assertEquals("5f31ea7b-144f-45b2-8899-0de92d99698a",commit.getBranchId());
         assertNull(commit.getBranchName());
-        assertEquals(new Date(1600257292*1000l),commit.getCommitDate());
+        assertEquals("2020-09-16T07:54:52-04:00[America/New_York]",commit.getCommitDate().toString());
         assertEquals("1",commit.getCommitId());
     }
 
@@ -97,6 +142,15 @@ public class TeamworkCloud19_3SourceTest {
         assertEquals("trunk", commits.get(1).getBranchName());
         assertEquals("trunk", commits.get(2).getBranchName());
         assertEquals("trunk", commits.get(3).getBranchName());
+    }
+
+    @Test
+    public void getBranchTestNull() {
+        when(teamworkService.getBranchById(endpoint, "id")).thenReturn(null);
+
+        Branch branch = teamworkCloud19_3Source.getBranch("184bdb32-3959-4e23-b14f-346fbd26c0eb");
+
+        assertNull(branch);
     }
 
     @Test
@@ -150,7 +204,7 @@ public class TeamworkCloud19_3SourceTest {
         commit.setBranchName("trunk");
         commit.setBranchId("5f31ea7b-144f-45b2-8899-0de92d99698a");
         commit.setParentCommit("-1");
-        commit.setCommitDate(new Date(1600257292L*1000));
+        commit.setCommitDate(ZonedDateTime.now());
         commit.setCommitId("1");
 
         CommitChanges commitChanges = teamworkCloud19_3Source.getCommitChanges(commit);
@@ -195,7 +249,7 @@ public class TeamworkCloud19_3SourceTest {
         commit.setBranchName("trunk");
         commit.setBranchId("5f31ea7b-144f-45b2-8899-0de92d99698a");
         commit.setParentCommit("-1");
-        commit.setCommitDate(new Date(1600257292L*1000));
+        commit.setCommitDate(ZonedDateTime.now());
         commit.setCommitId("1");
 
         CommitChanges commitChanges = teamworkCloud19_3Source.getCommitChanges(commit);
@@ -214,12 +268,14 @@ public class TeamworkCloud19_3SourceTest {
         commit.setBranchName("trunk");
         commit.setBranchId("5f31ea7b-144f-45b2-8899-0de92d99698a");
         commit.setParentCommit("-1");
-        commit.setCommitDate(new Date(1600257292L*1000));
+        commit.setCommitDate(ZonedDateTime.now());
         commit.setCommitId("1");
 
         CommitChanges commitChanges = teamworkCloud19_3Source.getCommitChanges(commit);
 
-        assertNull(commitChanges);
+        assertTrue(commitChanges.getAddedElements().isEmpty());
+        assertTrue(commitChanges.getUpdatedElements().isEmpty());
+        assertTrue(commitChanges.getDeletedElementIds().isEmpty());
     }
 
 
@@ -253,7 +309,7 @@ public class TeamworkCloud19_3SourceTest {
         commit.setBranchName("trunk");
         commit.setBranchId("5f31ea7b-144f-45b2-8899-0de92d99698a");
         commit.setParentCommit("1");
-        commit.setCommitDate(new Date(1600257292L*1000));
+        commit.setCommitDate(ZonedDateTime.now());
         commit.setCommitId("2");
 
         CommitChanges commitChanges = teamworkCloud19_3Source.getCommitChanges(commit);
@@ -264,6 +320,195 @@ public class TeamworkCloud19_3SourceTest {
         assertEquals(1, commitChanges.getDeletedElementIds().size());
         assertEquals("5d98719c-c720-487f-bb93-fa0a2496f08f", commitChanges.getDeletedElementIds().iterator().next());
     }
+
+    @Test
+    public void getBranches_Normal() {
+        when(teamworkService.getBranches(endpoint)).thenReturn(new JSONArray((getBranchesContentExample())));
+
+        List<Branch> branches = teamworkCloud19_3Source.getBranches();
+
+        assertNotNull(branches);
+        assertEquals(2, branches.size());
+        assertEquals("trunk", branches.get(0).getName());
+        assertEquals("184bdb32-3959-4e23-b14f-346fbd26c0eb", branches.get(1).getId());
+    }
+
+    @Test
+    public void getBranches_Null() {
+        when(teamworkService.getBranches(endpoint)).thenReturn(null);
+
+        List<Branch> branches = teamworkCloud19_3Source.getBranches();
+
+        assertTrue(branches.isEmpty());
+    }
+
+    @Test
+    public void canSendTo_Enforced_CanSend() {
+        teamworkCloud19_3Source.setEnforceProjectAssociations(true);
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setHost("otherHost");
+        when(sink.getEndpoint()).thenReturn(otherEndpoint);
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(
+                new JSONObject("{'metadata':{'PROJECT_ID':'otherProject'}}"));
+        doReturn(Set.of("otherHost")).when(teamworkCloud19_3Source).getAssociatedHosts();
+
+        assertTrue(teamworkCloud19_3Source.canSendTo(sink));
+    }
+
+    @Test
+    public void canSendTo_Enforced_NoHost() {
+        teamworkCloud19_3Source.setEnforceProjectAssociations(true);
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setHost("otherHost");
+        when(sink.getEndpoint()).thenReturn(otherEndpoint);
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(
+                new JSONObject("{'metadata':{'PROJECT_ID':'otherProject'}}"));
+        doReturn(Set.of("notamatchinghost")).when(teamworkCloud19_3Source).getAssociatedHosts();
+
+        assertFalse(teamworkCloud19_3Source.canSendTo(sink));
+    }
+
+    @Test
+    public void canSendTo_Enforced_NullHosts() {
+        teamworkCloud19_3Source.setEnforceProjectAssociations(true);
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setHost("otherHost");
+        when(sink.getEndpoint()).thenReturn(otherEndpoint);
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(
+                new JSONObject("{'metadata':{'PROJECT_ID':'otherProject'}}"));
+        doReturn(null).when(teamworkCloud19_3Source).getAssociatedHosts();
+
+        assertFalse(teamworkCloud19_3Source.canSendTo(sink));
+    }
+
+    @Test
+    public void canSendTo_Enforced_ProjectIdsNoMatch() {
+        teamworkCloud19_3Source.setEnforceProjectAssociations(true);
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setHost("otherHost");
+        when(sink.getEndpoint()).thenReturn(otherEndpoint);
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(
+                new JSONObject("{'metadata':{'PROJECT_ID':'anotherProject'}}"));
+
+        assertFalse(teamworkCloud19_3Source.canSendTo(sink));
+
+        verify(teamworkCloud19_3Source, times(0)).getAssociatedHosts();
+    }
+
+    @Test
+    public void canSendTo_Enforced_NullProject() {
+        teamworkCloud19_3Source.setEnforceProjectAssociations(true);
+        ProjectEndpoint otherEndpoint = new ProjectEndpoint();
+        otherEndpoint.setCollection("otherCollection");
+        otherEndpoint.setProject("otherProject");
+        otherEndpoint.setHost("otherHost");
+        when(sink.getEndpoint()).thenReturn(otherEndpoint);
+        when(teamworkService.getProjectInfo(endpoint)).thenReturn(null);
+
+        assertFalse(teamworkCloud19_3Source.canSendTo(sink));
+
+        verify(teamworkCloud19_3Source, times(0)).getAssociatedHosts();
+    }
+
+    @Test
+    public void canSendTo_Enforced_NotAProjectEndpoint() {
+        teamworkCloud19_3Source.setEnforceProjectAssociations(true);
+        assertFalse(teamworkCloud19_3Source.canSendTo(mock(Sink.class)));
+    }
+
+    @Test
+    public void canSendTo_NotEnforced_NotAProjectEndpoint() {
+        teamworkCloud19_3Source.setEnforceProjectAssociations(false);
+        assertTrue(teamworkCloud19_3Source.canSendTo(mock(Sink.class)));
+    }
+
+    @Test
+    public void getAssociatedHosts_Normal() {
+        JSONObject revisionObj = new JSONObject("{'ID':'123'}");
+        when(teamworkService.getLatestRevision(endpoint)).thenReturn(revisionObj);
+
+        JSONObject mainModel = new JSONObject("{'data':[{},{'@type':'uml:Model','kerml:esiData':{'appliedStereotypeInstance':{'@id':'asiid'}}}]}");
+        doReturn(Map.of("id", mainModel)).when(teamworkCloud19_3Source).getElementsFromRevision(revisionObj, "123", false);
+
+        JSONObject asi = new JSONObject();
+        JSONObject slot = new JSONObject("{'data':[{},{'kerml:esiData':{'definingFeature':{'@id':'did'},'value':[{'@id':'valueid'}]}}]}");
+        JSONObject value = new JSONObject("{'data':[{},{'@type':'uml:LiteralString','kerml:esiData':{'value':'thehost'}}]}");
+        doReturn(Map.of("asiid", asi, "slotid", slot, "valueid", value)).when(teamworkCloud19_3Source)
+                .getElementsRecursively(eq("123"), argThat(a -> a.contains("asiid") && a.size() == 1), isNull());
+
+        JSONObject definingFeature = new JSONObject("{'data':[{},{'kerml:esiID':'did','kerml:esiData':{'name':'MMS URL'}}]}");
+        doReturn(Map.of("did", definingFeature)).when(teamworkCloud19_3Source).getElements(eq("123"),
+                argThat(a -> a.size() == 1 && a.contains("did")), isNull());
+
+
+        Set<String> hosts = teamworkCloud19_3Source.getAssociatedHosts();
+        assertNotNull(hosts);
+        assertTrue(hosts.contains("thehost"));
+    }
+
+    @Test
+    public void getAssociatedHosts_None() {
+        JSONObject revisionObj = new JSONObject("{'ID':'123'}");
+        when(teamworkService.getLatestRevision(endpoint)).thenReturn(revisionObj);
+
+        JSONObject mainModel = new JSONObject("{'data':[{},{'@type':'uml:Model','kerml:esiData':{'appliedStereotypeInstance':{'@id':'asiid'}}}]}");
+        doReturn(Map.of("id", mainModel)).when(teamworkCloud19_3Source).getElementsFromRevision(revisionObj, "123", false);
+
+        JSONObject asi = new JSONObject();
+        JSONObject slot = new JSONObject("{'data':[{},{'kerml:esiData':{'definingFeature':{'@id':'did'},'value':[{'@id':'valueid'}]}}]}");
+        JSONObject value = new JSONObject("{'data':[{},{'@type':'uml:LiteralString','kerml:esiData':{'value':'thehost'}}]}");
+        doReturn(Map.of("asiid", asi, "slotid", slot, "valueid", value)).when(teamworkCloud19_3Source)
+                .getElementsRecursively(eq("123"), argThat(a -> a.contains("asiid") && a.size() == 1), isNull());
+
+        JSONObject definingFeature = new JSONObject("{'data':[{},{'kerml:esiID':'did','kerml:esiData':{'name':'Something else'}}]}");
+        doReturn(Map.of("did", definingFeature)).when(teamworkCloud19_3Source).getElements(eq("123"),
+                argThat(a -> a.size() == 1 && a.contains("did")), isNull());
+
+
+        Set<String> hosts = teamworkCloud19_3Source.getAssociatedHosts();
+        assertNull(hosts);
+    }
+
+    @Test
+    public void getAssociatedHosts_NoAsi() {
+        JSONObject revisionObj = new JSONObject("{'ID':'123'}");
+        when(teamworkService.getLatestRevision(endpoint)).thenReturn(revisionObj);
+
+        JSONObject mainModel = new JSONObject("{'data':[{},{'@type':'uml:Model','kerml:esiData':{}}]}");
+        doReturn(Map.of("id", mainModel)).when(teamworkCloud19_3Source).getElementsFromRevision(revisionObj, "123", false);
+
+        Set<String> hosts = teamworkCloud19_3Source.getAssociatedHosts();
+        assertNull(hosts);
+    }
+
+    @Test
+    public void getAssociatedHosts_NoMainModel() {
+        JSONObject revisionObj = new JSONObject("{'ID':'123'}");
+        when(teamworkService.getLatestRevision(endpoint)).thenReturn(revisionObj);
+
+        doReturn(Map.of()).when(teamworkCloud19_3Source).getElementsFromRevision(revisionObj, "123", false);
+
+        Set<String> hosts = teamworkCloud19_3Source.getAssociatedHosts();
+        assertNull(hosts);
+    }
+
+    @Test
+    public void getAssociatedHosts_NoRevisionId() {
+        JSONObject revisionObj = new JSONObject();
+        when(teamworkService.getLatestRevision(endpoint)).thenReturn(revisionObj);
+
+        Set<String> hosts = teamworkCloud19_3Source.getAssociatedHosts();
+        assertNull(hosts);
+    }
+
 
     private String getRevisionHistoryExample() {
         return "[\n" +
@@ -1023,6 +1268,76 @@ public class TeamworkCloud19_3SourceTest {
                 "  ],\n" +
                 "  \"empty\": false\n" +
                 "}";
+    }
+
+    private String getBranchesContentExample() {
+        return "[\n" +
+                "    [\n" +
+                "        {\n" +
+                "            \"ldp:membershipResource\": {\n" +
+                "                \"@id\": \"#5f31ea7b-144f-45b2-8899-0de92d99698a\"\n" +
+                "            },\n" +
+                "            \"@type\": [\n" +
+                "                \"ldp:DirectContainer\",\n" +
+                "                \"kerml:Branch\"\n" +
+                "            ],\n" +
+                "            \"ldp:hasMemberRelation\": \"kerml:revisions\",\n" +
+                "            \"@id\": \"5f31ea7b-144f-45b2-8899-0de92d99698a\",\n" +
+                "            \"@context\": \"twchost.com:8111/osmc/schemas/branchContainer\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"resourceID\": \"a3e235d0-8dff-4351-8bb4-c96f9ea1e8f5\",\n" +
+                "            \"createdDate\": 1600257292,\n" +
+                "            \"startRevision\": 1,\n" +
+                "            \"author\": \"lm392c\",\n" +
+                "            \"@type\": [\n" +
+                "                \"kerml:Branch\"\n" +
+                "            ],\n" +
+                "            \"authorInfo\": {\n" +
+                "                \"deleted\": false,\n" +
+                "                \"name\": \"lm392c\"\n" +
+                "            },\n" +
+                "            \"dcterms:title\": \"trunk\",\n" +
+                "            \"ID\": \"5f31ea7b-144f-45b2-8899-0de92d99698a\",\n" +
+                "            \"@id\": \"#5f31ea7b-144f-45b2-8899-0de92d99698a\",\n" +
+                "            \"latestRevision\": 3,\n" +
+                "            \"@context\": \"https://twchost.com:8111/osmc/schemas/branch\"\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    [\n" +
+                "        {\n" +
+                "            \"ldp:membershipResource\": {\n" +
+                "                \"@id\": \"#184bdb32-3959-4e23-b14f-346fbd26c0eb\"\n" +
+                "            },\n" +
+                "            \"@type\": [\n" +
+                "                \"ldp:DirectContainer\",\n" +
+                "                \"kerml:Branch\"\n" +
+                "            ],\n" +
+                "            \"ldp:hasMemberRelation\": \"kerml:revisions\",\n" +
+                "            \"@id\": \"184bdb32-3959-4e23-b14f-346fbd26c0eb\",\n" +
+                "            \"@context\": \"https://twchost.com:8111/osmc/schemas/branchContainer\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"resourceID\": \"a3e235d0-8dff-4351-8bb4-c96f9ea1e8f5\",\n" +
+                "            \"createdDate\": 1601477216,\n" +
+                "            \"startRevision\": 3,\n" +
+                "            \"author\": \"lm392c\",\n" +
+                "            \"@type\": [\n" +
+                "                \"kerml:Branch\"\n" +
+                "            ],\n" +
+                "            \"authorInfo\": {\n" +
+                "                \"deleted\": false,\n" +
+                "                \"name\": \"lm392c\"\n" +
+                "            },\n" +
+                "            \"dcterms:description\": \"Branch \\\"TestBranchRev3\\\" created\",\n" +
+                "            \"dcterms:title\": \"TestBranchRev3\",\n" +
+                "            \"ID\": \"184bdb32-3959-4e23-b14f-346fbd26c0eb\",\n" +
+                "            \"@id\": \"#184bdb32-3959-4e23-b14f-346fbd26c0eb\",\n" +
+                "            \"latestRevision\": 4,\n" +
+                "            \"@context\": \"https://twchost.com:8111/osmc/schemas/branch\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "]";
     }
 
     private Map<String, JSONObject> mapChildJsonObjects(JSONObject parent){

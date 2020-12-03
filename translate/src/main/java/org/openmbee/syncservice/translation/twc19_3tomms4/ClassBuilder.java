@@ -1,7 +1,7 @@
 package org.openmbee.syncservice.translation.twc19_3tomms4;
 
-import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
 import org.json.JSONArray;
+import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
 
 public class ClassBuilder extends Mms4ElementBuilder {
     public ClassBuilder(Twc19_3ToMms4Translator translator, TranslationContext context) {

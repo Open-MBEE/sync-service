@@ -1,11 +1,11 @@
 package org.openmbee.syncservice.core.queue.service;
 
-import org.openmbee.syncservice.core.queue.dto.QueueDetailsResponseTO;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.openmbee.syncservice.core.queue.dto.QueueDetailsResponseTO;
 
 import java.io.IOException;
 

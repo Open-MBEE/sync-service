@@ -1,10 +1,10 @@
 package org.openmbee.syncservice.core.translation.elements;
 
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.core.syntax.fields.FieldId;
 import org.openmbee.syncservice.core.translation.Translator;
 import org.openmbee.syncservice.core.utils.JSONUtils;
-import org.json.JSONObject;
 
 
 public class AsymmetricDetail<FS extends FieldId, FT extends FieldId, S,T> extends JSONUtils implements Detail {

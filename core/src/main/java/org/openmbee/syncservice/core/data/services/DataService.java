@@ -1,12 +1,12 @@
 package org.openmbee.syncservice.core.data.services;
 
+import org.openmbee.syncservice.core.constants.SyncServiceConstants;
 import org.openmbee.syncservice.core.data.jobs.Job;
 import org.openmbee.syncservice.core.data.jobs.JobFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.openmbee.syncservice.core.constants.SyncServiceConstants;
 
 
 @Service

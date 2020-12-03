@@ -1,7 +1,7 @@
 package org.openmbee.syncservice.core.syntax.fields;
 
-import org.openmbee.syncservice.core.syntax.path.KeyedSegment;
 import org.json.JSONObject;
+import org.openmbee.syncservice.core.syntax.path.KeyedSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

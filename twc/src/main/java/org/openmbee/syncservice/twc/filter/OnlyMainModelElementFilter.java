@@ -1,13 +1,13 @@
 package org.openmbee.syncservice.twc.filter;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
 import org.openmbee.syncservice.core.syntax.Fields;
 import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.core.utils.JSONUtils;
 import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
 import org.openmbee.syncservice.twc.syntax.fields.TwcFields;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,6 +93,7 @@ public class OnlyMainModelElementFilter extends JSONUtils implements ElementFilt
             return;
         } else if(mainModelEsiId != null) {
             logger.error("Cannot set main model more than once!");
+            return;
         }
         mainModelEsiId = esiId;
         modelPurgatory.forEach(this::addModel);

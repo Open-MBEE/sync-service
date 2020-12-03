@@ -1,20 +1,17 @@
 package org.openmbee.syncservice.translation.twc19_3tomms4;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openmbee.syncservice.core.syntax.Fields;
 import org.openmbee.syncservice.core.syntax.Parser;
 import org.openmbee.syncservice.core.syntax.fields.CommonFields;
 import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.openmbee.syncservice.translation.twc19_3tomms4.valuebuilders.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SlotBuilder extends AsiSlotBaseBuilder {
     private final static Logger logger = LoggerFactory.getLogger(SlotBuilder.class);
@@ -56,10 +53,11 @@ public class SlotBuilder extends AsiSlotBaseBuilder {
             //Slot values are held separately in TWC, but embedded in MMS
             JSONArray valueElements = parser.getFieldFromElement(SysMLv1X.VALUE, original, JSONArray.class);
             List<String> valueElementIds = translator.getJsonUtils().flattenObjectArray(valueElements, "@id");
+            Map<String, JSONObject> valueElementMap = context.getElements(valueElementIds);
             List<JSONObject> values = new ArrayList<>(valueElementIds.size());
 
             for (int i = 0; i < valueElementIds.size(); i++) {
-                JSONObject valueElement = context.getElement(valueElementIds.get(i));
+                JSONObject valueElement = valueElementMap.get(valueElementIds.get(i));
                 String type = translator.getSourceSyntax().getParser().getFieldFromElement(SysMLv1X.ELEMENT_TYPE, valueElement, String.class);
                 ValueBuilder valueBuilder = getValueBuilder(type);
                 if(valueBuilder != null) {

@@ -1,10 +1,10 @@
 package org.openmbee.syncservice.twc.sourcesink;
 
+import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
+import org.openmbee.syncservice.core.data.sourcesink.ISourceSinkFactory;
+import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
 import org.openmbee.syncservice.core.data.sourcesink.Sink;
 import org.openmbee.syncservice.core.data.sourcesink.Source;
-import org.openmbee.syncservice.core.data.services.CommitReciprocityService;
-import org.openmbee.syncservice.core.data.sourcesink.ProjectEndpoint;
-import org.openmbee.syncservice.core.data.sourcesink.ISourceSinkFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -27,8 +27,11 @@ public class TeamworkCloudSourceSinkFactory implements ISourceSinkFactory {
 
     @Override
     public Source getSource(ProjectEndpoint sourceEndpoint) {
-        //TODO: Verify this project exists in TWC
-        return autowire(new TeamworkCloud19_3Source(sourceEndpoint));
+        TeamworkCloud19_3Source source = autowire(new TeamworkCloud19_3Source(sourceEndpoint));
+        if(source.isValid()) {
+            return source;
+        }
+        return null;
     }
 
     @Override

@@ -1,8 +1,8 @@
 package org.openmbee.syncservice.core.queue.service;
 
-import java.io.IOException;
-
 import org.springframework.amqp.AmqpException;
+
+import java.io.IOException;
 
 
 public interface Sender {

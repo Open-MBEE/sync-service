@@ -1,10 +1,10 @@
 package org.openmbee.syncservice.translation.twc19_3tomms4;
 
+import org.json.JSONArray;
 import org.openmbee.syncservice.core.syntax.fields.CommonFields;
 import org.openmbee.syncservice.core.syntax.fields.Field;
 import org.openmbee.syncservice.mms.mms4.MmsFields;
 import org.openmbee.syncservice.sysml.syntax.SysMLv1X;
-import org.json.JSONArray;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -15,4 +15,8 @@ public class ReciprocatedFlow extends Flow {
     public UnreciprocatedCommits getUnreciprocatedCommits() {
         return commitReciprocityService.getUnreciprocatedSourceCommitsSinceLastReciprocatedCommit();
     }
+
+    public void registerReciprocatedCommit(String sourceCommitId, String sinkCommitId) {
+        commitReciprocityService.registerReciprocatedCommit(sourceCommitId, sinkCommitId);
+    }
 }
